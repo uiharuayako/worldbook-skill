@@ -4,12 +4,43 @@
 
 ---
 
-## 第零步：澄清式问询（PromptSmith 原则）
+## 第零步：任务判断逻辑（最优先）
+
+### 核心规则
+
+**先判断用户要的是角色卡还是世界书：**
+
+| 用户表达 | 输出内容 | 触发条件 |
+|----------|----------|----------|
+| 写卡/角色卡/人物设定/生成角色 | 完整的角色卡 | 自动 |
+| 世界书/世界观/设定集 | 世界书条目 | 自动 |
+| 完整的卡/全套/整套 | 角色卡+世界书 | 用户明确要求 |
+| MVU/ZOD/变量 | 启用MVU | **仅用户明确要求时** |
+| 美化/HTML/前端/状态栏 | 启用HTML | **仅用户明确要求时** |
+
+### 铁律
+
+**如果用户没说 MVU 或 HTML，绝对不要主动建议或添加。**
+
+### 确认流程（角色卡任务）
+
+角色卡任务必须执行 DoubleCheck：
+
+1. 输出完整草稿
+2. 等待用户确认（说"可以""满意""继续""生成"等）
+3. 用户确认后 → 用 card-generator.py 生成 JSON
+
+世界书任务按原有总纲先行流程执行。
+
+---
+
+## 第一步：澄清式问询（PromptSmith 原则）
 
 不确定任务类型时，**先提问，再动手**。对照以下维度向用户确认：
 
 | 维度 | 问什么 |
 |------|--------|
+| 任务类型 | 是写角色卡还是世界书？（第一步必须确认） |
 | 任务规模 | 几个核心角色？是否多角色卡？条目数预估？ |
 | 世界观复杂度 | 真实背景 / 套路世界 / 完全原创？ |
 | 素材来源 | 原创构思 / 轻小说原文 / 游戏文本 / 其他？ |
@@ -27,9 +58,30 @@
 
 根据用户的输入，判断属于以下哪种任务类型：
 
-### 类型 1：原创角色卡 / 原创世界书
+### 类型 0：角色卡创建
 
-**触发关键词：** 创建角色、写卡、角色设定、生成角色、角色卡、写一个角色、设计角色、世界书、生成世界书、创建世界书
+**触发关键词：** 写卡、角色卡、人物设定、生成角色、创建角色、设计角色
+
+**需要读取的 reference：**
+- `references/card-writing-guide.md`（角色卡编写规范）
+- `references/character-guide.md`（角色条目结构）
+- `references/worldbuilding-guide.md`（世界观编写）
+- `references/config-guide.md`（配置规范）
+- `references/position-guide.md`
+- `references/card-generator-guide.md`（生成工具）
+
+**如果用户要求 MVU：** 额外读取 `references/mvu-guide.md`
+**如果用户要求 HTML：** 额外读取 `references/html-beautify-guide.md`
+
+**创建后强制创建禁词条目（3 条：叙事禁词 + 比喻禁词 + 描写禁律）。**
+
+**必须执行 DoubleCheck 确认流程。**
+
+---
+
+### 类型 1：原创世界书 / 原创角色卡（世界书部分）
+
+**触发关键词：** 世界书、生成世界书、创建世界书、世界观设定
 
 **需要读取的 reference：**
 - `references/character-guide.md`
@@ -97,7 +149,7 @@
 - `references/config-guide.md`
 - `references/position-guide.md`
 
-**文风条目需包含禁词规范（参照 SKILL.md 第二步 2.6）。**
+**文风条目需包含禁词规范。**
 
 ---
 
@@ -125,20 +177,47 @@
 
 ---
 
+### 类型 8：MVU ZOD 变量系统
+
+**触发关键词：** MVU、ZOD、变量、变量系统、数值系统、好感度系统
+
+**需要读取的 reference：**
+- `references/mvu-guide.md`
+- `references/config-guide.md`
+- `references/position-guide.md`
+
+---
+
+### 类型 9：HTML 前端美化
+
+**触发关键词：** 美化、HTML、前端、状态栏、界面、UI
+
+**需要读取的 reference：**
+- `references/html-beautify-guide.md`
+- `references/config-guide.md`
+- `references/position-guide.md`
+
+---
+
 ## 决策流程
 
 ```
-用户输入 → 澄清式问询（PromptSmith） → 匹配关键词 → 确定任务类型 → 读取对应 reference 文件 → 思维链分析 → 开始执行
+用户输入 → 判断任务类型(角色卡? 世界书? MVU? HTML?)
+         → 角色卡: 读取 card-writing-guide.md → DoubleCheck确认 → card-generator.py生成
+         → 世界书: 按原有流程 → 总纲先行 → 逐条填充 → 自查
+         → 转化:   读取 conversion-guide.md → 提取 → 条目化 → 自查
 ```
 
 ---
 
 ## 执行原则
 
-1. **先读 reference，再动手。** 不要凭记忆写，必须读过对应 reference 后才开始写条目。
+1. **先读 reference，再动手。** 不要凭记忆写，必须读过对应 reference 后才开始写内容。
 2. **每个任务类型都必须读 `config-guide.md` 和 `position-guide.md`**——配置错误比内容错误更难排查。
-3. **转化任务必须先读 `conversion-guide.md`**，它规定了提取→条目创建的整体流程。
-4. 对于修改任务，**先用 `query.py --brief` 查看**，再确定改什么。
-5. **所有创建任务强制写入禁词条目（3 条）**——叙事禁词 + 比喻禁词 + 描写禁律。
-6. **所有条目键不可跳过 `--prevent-recursion --exclude-recursion`**——参照 config-guide.md 第四节。
-7. **零度写作、白描原则贯穿始终**——不写意象比喻、不写解释性修饰、不写不存在的事物。
+3. **角色卡任务必须读 `card-writing-guide.md`**，并执行 DoubleCheck 确认流程。
+4. **转化任务必须先读 `conversion-guide.md`**，它规定了提取→条目创建的整体流程。
+5. 对于修改任务，**先用 `query.py --brief` 查看**，再确定改什么。
+6. **所有创建任务强制写入禁词条目（3 条）**——叙事禁词 + 比喻禁词 + 描写禁律。
+7. **所有条目键不可跳过 `--prevent-recursion --exclude-recursion`**——参照 config-guide.md 第四节。
+8. **零度写作、白描原则贯穿始终**——不写意象比喻、不写解释性修饰、不写不存在的事物。
+9. **MVU 和 HTML 仅用户明确要求时才启用**——不主动建议，不主动添加。

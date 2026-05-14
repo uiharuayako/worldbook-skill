@@ -1,15 +1,24 @@
 name: world-book-create
-display_name: World Book Manager
-short_description: Create and edit SillyTavern world book JSON entries via CLI
+display_name: 角色卡/世界书管理助手
+short_description: Create and manage SillyTavern Character Cards (角色卡) and World Books (世界书)
 description: >-
-  CLI tool for managing SillyTavern World Book (世界书) JSON files.
-  Supports creating new world books, adding/editing/deleting entries,
-  setting injection positions and activation strategies.
-  Supports multiple scenarios: original card creation, light novel/game conversion,
-  writing style extraction, item/ability configuration, world-building.
+  角色卡/世界书管理助手 — 通过交互式对话帮助用户创建和管理 SillyTavern 角色卡与世界书。
+  支持角色卡编写（角色档案/性格/世界观/开场白）、世界书创建、
+  轻小说/游戏转化、文风提取、物品/能力设定。
+  可选 MVU ZOD 变量系统和 HTML 前端美化（仅用户明确要求时启用）。
+  HTML美化含三种模式：A=状态栏有MVU / B=状态栏无MVU / C=全局美化正文包裹。
+  集成 card-generator.py 生成 chara_card_v3 格式角色卡 JSON。
 default_prompt: |
-  在开始工作前，先读取 references/guide.md 判断任务类型，再按指引读取对应 reference 文件。
+  在开始工作前，先判断任务类型（角色卡 / 世界书 / 转化 / MVU / HTML / 全局美化）。
+  
+  角色卡任务：读取 references/card-writing-guide.md，使用 DoubleCheck 质量检查清单自检。
+  世界书任务：读取 references/guide.md 场景路由器，按指引读取对应 reference 文件。
+  HTML美化：读取 references/html-beautify-guide.md，按用户意图确定模式（仅状态栏/全局美化/两者都要）。
+  全局美化：需创建 D0 格式保持条目（position=4, depth=0），正则顺序为状态栏在前→全局在后。
   
   使用 scripts/world-book-create.py 管理世界书条目。
   使用 scripts/query.py 查看和搜索世界书条目。
-  创建任务时必须先写 outline.txt 总纲，再逐条填充条目。
+  使用 scripts/card-generator.py 生成和验证角色卡 JSON。
+  
+  内容格式：XML 包裹 YAML。所有创建任务强制写入 3 条禁词条目。
+  MVU、HTML、全局美化 仅用户明确要求时才启用，绝不主动建议。
