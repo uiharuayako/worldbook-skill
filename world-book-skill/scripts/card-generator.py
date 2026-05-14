@@ -26,6 +26,22 @@ from datetime import datetime, timezone
 # 工具函数
 # ============================================================
 
+def parse_key_list(value):
+    """将逗号分隔的触发词字符串拆分为数组，兼容已拆分的数组"""
+    if not value:
+        return []
+    if isinstance(value, list):
+        result = []
+        for item in value:
+            if isinstance(item, str) and ',' in item:
+                result.extend([k.strip() for k in item.split(',') if k.strip()])
+            elif item:
+                result.append(item)
+        return result
+    if isinstance(value, str):
+        return [k.strip() for k in value.split(',') if k.strip()]
+    return []
+
 def gen_uuid():
     """生成UUID v4"""
     return str(uuid.uuid4())
@@ -516,8 +532,8 @@ class CardConfig:
             builder.add_worldbook_entry(
                 comment=entry.get("comment", ""),
                 content=entry.get("content", ""),
-                keys=entry.get("keys", []),
-                secondary_keys=entry.get("secondary_keys", []),
+                keys=parse_key_list(entry.get("keys", [])),
+                secondary_keys=parse_key_list(entry.get("secondary_keys", [])),
                 constant=entry.get("constant", True),
                 position=entry.get("position", "after_char"),
                 position_num=entry.get("extensions", {}).get("position",
