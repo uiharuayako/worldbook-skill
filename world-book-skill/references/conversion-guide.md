@@ -1,6 +1,6 @@
-# 轻小说/游戏/小说 → 世界书 转化工作流
+# 轻小说/游戏/小说 → 世界书/角色卡 转化工作流
 
-本文档规定了将外部源材料（轻小说、游戏文本、小说原文等）转化为世界书条目的完整流程。**必须严格按照以下步骤执行。**
+本文档规定了将外部源材料（轻小说、游戏文本、小说原文等）转化为世界书/角色卡条目的完整流程。**必须严格按照以下步骤执行。**
 
 ---
 
@@ -14,15 +14,15 @@
 思维链:
   需求拆解:
     - 显性需求: <用户明确要求的内容>
+    - 类型需求：<世界书or角色卡？>
     - 隐性需求: <用户未明说但需要补全的——如"这个轻小说转成角色卡"隐含了需要提取世界观>
     - 冲突判断: <需求中是否有矛盾点？如何协调？>
   条目预估:
     - 世界观类型: A/B/C?
     - 预估角色数: <核心角色 N 个>
     - 预估条目数: <约 X 条>
+    - 世界书类型: 单角色世界书/多角色世界书？
     - 卡片类型: 单角色卡 / 多角色卡?
-  禁词规划:
-    - 需要创建 3 个禁词条目（叙事/比喻/描写禁律）
 ```
 
 ### 0.2 准备工作
@@ -66,7 +66,7 @@
 
 ### 1.3 细分提取
 
-根据 `references/extract-worldbuilding.md`、`references/extract-character.md`、`references/extract-item.md` 中的分析维度，对源材料进行系统性提取。每个维度输出：
+根据 `references/extract-worldbuilding-guide.md`、`references/extract-character.md`、`references/extract-item.md` 中的分析维度，对源材料进行系统性提取。每个维度输出：
 - **手法总结**：源材料中的手法特点（如需要保留文风时尤其重要）
 - **原始例句**：保持原句原貌，标注章节出处
 - **提取结果**：按条目格式化的信息
@@ -124,19 +124,7 @@
 | 世界观总纲 | 世界观 | ↑Char | 蓝灯 | 1 | ~200 | - |
 | 女主·XX | 角色 | ↓Char | 蓝灯 | 99 | ~400 | 第1,3,5章 |
 | 男主·YY | 角色 | ↓Char | 蓝灯 | 99 | ~350 | 第2,4,6章 |
-| 禁词·叙事 | 禁词 | ↑AT | 蓝灯 | 1 | ~150 | - |
-| 禁词·比喻 | 禁词 | ↑AT | 蓝灯 | 2 | ~120 | - |
-| 禁词·描写 | 禁词 | ↑AT | 蓝灯 | 3 | ~150 | - |
 ...
-
-## 禁词条目规划
-<!-- 所有世界书必须创建，不可跳过 -->
-| 条目 | 位置 | 激活 | 顺序 |
-|------|------|------|------|
-| 禁词表·叙事禁词 | ↑AT | 蓝灯 | 1 |
-| 禁词表·比喻禁词 | ↑AT | 蓝灯 | 2 |
-| 禁词表·描写禁律 | ↑AT | 蓝灯 | 3 |
-```
 
 ### 2.2 大纲规则
 
@@ -144,7 +132,6 @@
 - 大纲中的行号索引和重要章节标注**不写入世界书条目**，仅作为本地参考
 - 条目规划表中的"依赖章节"**不写入世界书内容**，仅用于指引后续的细读步骤
 - 大纲写好后才开始创建条目，**不能跳过此步骤直接写条目**
-- **禁词条目规划不可省略**——这是强制要求
 
 ---
 
@@ -205,7 +192,6 @@ python scripts/world-book-create.py <世界书路径> --add \
 3. **然后创建物品/能力条目**（position=1, order=50-98）
 4. **创建场景/事件条目**（position=1, order=50-98, 绿灯触发）
 5. **创建故事/章节条目**（position=1, order=200+, 绿灯触发，见 `extract-story.md`）
-6. **最后创建禁词条目**（position=2, order=1-3, 蓝灯, 见 SKILL.md 2.6）
 
 ### 每创建一个条目后验证
 
@@ -224,37 +210,7 @@ python scripts/query.py <世界书路径> --uid <新UID>
 
 ---
 
-## 第六步：创建禁词条目
-
-**创建禁词条目是强制步骤，所有世界书都必须包含。**
-
-在创建完所有内容条目后，按以下顺序创建 3 个禁词条目：
-
-```bash
-# 禁词条目 1：叙事禁词
-python scripts/world-book-create.py <世界书路径> --add \
-  --comment "禁词表·叙事禁词" \
-  --content @禁词_叙事.txt \
-  --constant --position 2 --order 1 --prevent-recursion --exclude-recursion
-
-# 禁词条目 2：比喻禁词
-python scripts/world-book-create.py <世界书路径> --add \
-  --comment "禁词表·比喻禁词" \
-  --content @禁词_比喻.txt \
-  --constant --position 2 --order 2 --prevent-recursion --exclude-recursion
-
-# 禁词条目 3：描写禁律
-python scripts/world-book-create.py <世界书路径> --add \
-  --comment "禁词表·描写禁律" \
-  --content @禁词_描写.txt \
-  --constant --position 2 --order 3 --prevent-recursion --exclude-recursion
-```
-
-禁词条目的具体内容见 SKILL.md 第二步 2.6。
-
----
-
-## 第七步：总体验证
+## 第六步：总体验证
 
 所有条目创建完成后，运行总体验证：
 
@@ -276,19 +232,13 @@ python scripts/world-book-create.py <世界书路径> --add \
    ```
    逐条检查 position、order 是否与大纲规划一致。
 
-3. **禁词条目完整性检查**：
-   确认 3 个禁词条目均已创建：
-   - `禁词表·叙事禁词` — position=2, order=1, constant=true
-   - `禁词表·比喻禁词` — position=2, order=2, constant=true
-   - `禁词表·描写禁律` — position=2, order=3, constant=true
-
-4. **内容检查**：抽查 2-3 个条目的完整内容
+3. **内容检查**：抽查 2-3 个条目的完整内容
    ```bash
    python scripts/query.py <世界书路径> --uid <UID>
    ```
    检查内容中是否有禁词泄漏（一丝/弧度/不易察觉/鲜明对比/意象比喻等）。
 
-5. **嵌套引用检查**（如果有使用 @UID/@名称 引用）：
+4. **嵌套引用检查**（如果有使用 @UID/@名称 引用）：
    ```bash
    python scripts/query.py <世界书路径> --resolve
    ```
@@ -329,12 +279,11 @@ python scripts/world-book-create.py <世界书路径> --add \
 - [ ] 思维链分析已写入 outline.txt
 - [ ] 章节行号索引已记录
 - [ ] 重要章节已标注
-- [ ] 条目规划表完整（含禁词条目行）
+- [ ] 条目规划表完整
 - [ ] 已复读所有标注的重要章节
 - [ ] 总纲条目已创建
 - [ ] 所有内容条目已逐条创建
 - [ ] 所有条目命令含 `--prevent-recursion --exclude-recursion`
-- [ ] 3 个禁词条目已创建
 - [ ] 单角色卡 → 所有角色条目 constant=true
 - [ ] 多角色卡 → 速览 constant=true + 详情 constant=false+keys
 - [ ] NPC/场景/故事章节 constant=false+keys+scanDepth=2

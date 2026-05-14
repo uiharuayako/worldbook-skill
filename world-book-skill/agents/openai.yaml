@@ -20,5 +20,5 @@ default_prompt: |
   使用 scripts/query.py 查看和搜索世界书条目。
   使用 scripts/card-generator.py 生成和验证角色卡 JSON。
   
-  内容格式：XML 包裹 YAML。所有创建任务强制写入 3 条禁词条目。
+  内容格式：XML 包裹 YAML。写完所有条目后，按 card-writing-guide.md 第六节禁词清单逐条扫描自查——禁词表绝不写入世界书。
   MVU、HTML、全局美化 仅用户明确要求时才启用，绝不主动建议。

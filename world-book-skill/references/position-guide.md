@@ -24,7 +24,6 @@ Sourced from SillyTavern `public/scripts/world-info.js:855-864`.
 | 场景/事件/物品 | 1 (↓Char) | Specific details, keyword-triggered |
 | 故事/章节 | 1 (↓Char) | Story chapters, keyword-triggered, order 200+ |
 | 写作规范/指导 | 2 (↑AT) | Writing rules injected into system prompt area |
-| **禁词条目（叙事/比喻/描写禁律）** | **2 (↑AT)** | **Forbidden words, must be position=2, constant, 3 entries** |
 | 文风指令 | 2 (↑AT) | Style guidance, constant |
 | 二次解释 (behavior correction) | 4 (@D, depth=0) | Last thing AI reads → strongest influence. role=system |
 | 格式要求 for examples | 5 (↑EM) or 6 (↓EM) | Wraps example messages |
@@ -40,5 +39,4 @@ Sourced from SillyTavern `public/scripts/world-info.js:855-864`.
 - When using position 7 (Outlet), `--outlet-name` is required
 - The `@D` position uses the entry's `depth` value to determine insertion point
 - `role` field matters for `@D`: use `--role 0` (system) for D0 behavior instructions
-- **禁词条目固定使用 position=2, constant, order=1-3**（详见 config-guide.md 第七节）
 - 所有条目 CLI 命令必须同时带 `--prevent-recursion --exclude-recursion`

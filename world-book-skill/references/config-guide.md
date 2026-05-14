@@ -133,9 +133,6 @@ NPC条目：全名 + 昵称 + 外号 + 职务
 
 # 文风条目（蓝灯，Author's Note前）
 --constant --position 2 --order 1 --prevent-recursion --exclude-recursion
-
-# 禁词条目（蓝灯，Author's Note前）
---constant --position 2 --order 1 --prevent-recursion --exclude-recursion
 ```
 
 ---
@@ -178,4 +175,3 @@ NPC条目：全名 + 昵称 + 外号 + 职务
 - [ ] **⚠️ 所有条目 `preventRecursion=true` 且 `excludeRecursion=true`**（脚本默认false，不加flag就不会设！）
 - [ ] 关键词用英文逗号分隔，无空格
 - [ ] 绿灯条目 `scanDepth=2`
-- [ ] 禁词条目已创建（3条：叙事禁词 + 比喻禁词 + 描写禁律，蓝灯 position=2）
