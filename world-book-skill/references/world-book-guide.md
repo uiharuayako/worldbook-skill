@@ -1,306 +1,335 @@
-# 场景路由器
+# 世界书条目编写规范
 
-本文档帮助模型在开始任何工作前，自行判断任务类型，然后读取对应的 reference 文件。**必须在读取本文件后，再根据任务类型读取相应的参考文件，不可跳过。**
+> 将世界观设计转化为可写入酒馆世界书的具体条目。本文是落地执行层。设计构思由 world-building-guide.md 负责，本文件负责把设计变成条目并配置。
 
----
+## 本文内容
 
-## 第零步：任务判断逻辑（最优先）
-
-### 核心规则
-
-**先判断用户要的是角色卡还是世界书：**
-
-| 用户表达 | 输出内容 | 触发条件 |
-|----------|----------|----------|
-| 写卡/角色卡/人物设定/生成角色 | 完整的角色卡 | 自动 |
-| 世界书/世界观/设定集 | 世界书条目 | 自动 |
-| 完整的卡/全套/整套 | 角色卡+世界书 | 用户明确要求 |
-| MVU/ZOD/变量 | 启用MVU | **仅用户明确要求时** |
-| 美化/HTML/前端/状态栏 | 启用HTML | **仅用户明确要求时** |
-
-### 铁律
-
-**如果用户没说 MVU 或 HTML，绝对不要主动建议或添加。**
-
-### 确认流程（角色卡任务）
-
-角色卡任务必须执行 DoubleCheck：
-
-1. 输出完整草稿
-2. 等待用户确认（说"可以""满意""继续""生成"等）
-3. 用户确认后 → 用 card-generator.py 生成 JSON
-
-世界书任务按原有总纲先行流程执行。
+>本文指引世界书条目的插入层级。指引将世界观设计阶段的产出（总纲文档、人物设定、场景描述等）逐一转化为世界书条目，包括条目内容、触发策略（蓝灯/绿灯）、位置配置、递归设置。不做世界观设计，只做落地转化与配置。每写完一个条目必须执行 query.py 验证。
 
 ---
 
-## 第一步：澄清式问询
+## 工作流程
 
-不确定任务类型时，**先提问，再动手**。对照以下维度向用户确认：
+### 阶段一：规划 — 判断卡型并列出条目表
 
-| 维度 | 问什么 |
-|------|--------|
-| 任务类型 | 是写角色卡还是世界书？（第一步必须确认） |
-| 任务规模 | 几个核心角色？是否多角色卡？条目数预估？ |
-| 世界观复杂度 | 真实背景 / 套路世界 / 完全原创？ |
-| 素材来源 | 原创构思 / 轻小说原文 / 游戏文本 / 其他？ |
-| 输出格式 | 单角色卡还是多角色卡？独立世界书还是嵌入角色卡？ |
-| 风格偏好 | 严肃文学 / 轻松日常 / 二次元 / 网络小说 / 白描 / 心理流？ |
-| 特殊需求 | 是否需要 NSFW 设定？是否需要文风提取？ |
+前置条件：已有完整的世界观设计文档（总纲、角色设定、场景等），或用户提供了足够的创作素材。
 
-**多层任务判定原则：** 如果用户输入同时匹配多种类型（如"把这个轻小说转成角色卡"），按**类型 2（转化）**处理，它已包含所有子类型需要的 reference。
+#### 步骤1：判断卡片类型
 
-如果用户输入不明确，**先询问用户意图**，不猜测。
+根据核心角色数量判断。同一角色的拆分条目（基础/外貌/性格/背景/能力等）不等于多个角色。
 
----
+| 类型 | 判定标准 | 蓝绿灯策略 |
+|------|---------|------------|
+| 单角色卡 | 只有1个核心角色，即使拆成多个条目 | 该角色所有条目蓝灯常驻 |
+| 多角色卡 | 有2个及以上核心角色 | 角色速览蓝灯 + 各角色详情绿灯 |
 
-## 任务类型识别
+#### 步骤2：列出条目规划表
 
-根据用户的输入，判断属于以下哪种任务类型：
+按以下顺序规划，输出表格供用户确认。条目创建必须严格按照此顺序。
 
-### 类型 0：角色卡创建
+| order | 条目类型 | position | constant | 说明 |
+|-------|---------|----------|----------|------|
+| 1 | 世界观总纲 | 0 (before_char) | true | 世界框架，始终存在 |
+| 4 | 角色速览 | 1 (after_char) | true | 多角色卡必写，单角色卡可跳过 |
+| 10-35 | 人物设定条目 | 1 (after_char) | 视卡型 | 每角色一条，XML结构；单卡蓝灯，多卡绿灯 |
+| 35-45 | 性格条目 | 1 (after_char) | 视卡型 | 每角色一条独立条目；单卡蓝灯，多卡绿灯 |
+| 50-98 | 物品/能力/场景/事件 | 1 (after_char) | false | 绿灯关键词触发，scanDepth=2 |
+| 99 | 角色详情补充 | 1 (after_char) | 视卡型 | 多卡绿灯 |
+| 100 | NPC/其他 | 1 (after_char) | false | 绿灯关键词触发 |
 
-**触发关键词：** 写卡、角色卡、人物设定、生成角色、创建角色、设计角色
-
-**需要读取的 reference：**
-- `references/card-writing-guide.md`（角色卡编写规范）
-- `references/character-guide.md`（角色条目结构）
-- `references/worldbuilding-guide.md`（世界观编写）
-- `references/config-guide.md`（配置规范）
-- `references/position-guide.md`
-- `references/card-generator-guide.md`（生成工具）
-
-**如果用户要求 MVU：** 额外读取 `references/mvu-guide.md`
-**如果用户要求 HTML：** 额外读取 `references/html-beautify-guide.md`
-
-**必须执行 DoubleCheck 确认流程。**
-
-编写完成后，按 `card-writing-guide.md` 第六节禁词清单逐条扫描所有内容，确保无禁词渗入。
+确认后方可进入下一阶段。
 
 ---
 
-### 类型 1：原创世界书 / 原创角色卡（世界书部分）
+### 阶段二：总纲 — 写入世界观总纲条目
 
-**触发关键词：** 世界书、生成世界书、创建世界书、世界观设定
+前置条件：条目规划表已确认。
 
-**需要读取的 reference：**
-- `references/character-guide.md`
-- `references/worldbuilding-guide.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-- 如果涉及物品/能力：`references/extract-item.md`
+#### 步骤1：写入总纲内容
 
-编写完成后，按 `card-writing-guide.md` 第六节禁词清单逐条扫描所有条目内容，确保无禁词渗入。
+总纲是世界观最核心的压缩描述，包含：世界类型、时代背景、核心规则/机制、势力格局。用自然段压缩，通常300-500字。不使用XML结构，直接以自然语言YAML段落形式书写。
 
----
-
-### 类型 2：轻小说/游戏/小说 → 转化世界书/角色卡
-
-**触发关键词：** 轻小说、小说、转角色卡、根据原文、根据小说、转化、提取、原作、游戏、文本转化、原文
-
-**需要读取的 reference：**
-- `references/conversion-guide.md`（转化工作流总览）
-- `references/extract-worldbuilding-guide.md`（世界观提取）
-- `references/extract-character.md`（角色提取）
-- `references/extract-item.md`（物品/能力提取）
-- `references/extract-story.md`（故事/章节提取）
-- `references/character-guide.md`（角色条目写入规范）
-- `references/worldbuilding-guide.md`（世界观条目写入规范）
-- `references/config-guide.md`（配置规范）
-- `references/card-writing-guide.md`（角色卡编写教程）
-- `references/position-guide.md`
-- **不读** `references/extract-style.md`（除非用户明确要求提取文风）
-
-提取完成后，按 `card-writing-guide.md` 第六节禁词清单逐条扫描所有条目内容。
-
-**转化→角色卡时**：转化流程产出的世界书条目嵌入角色卡，角色卡 description + 开场白按 `card-writing-guide.md` 额外撰写。转化产生的 outline.txt 同时服务于世界书条目和角色卡内容。
-
----
-
-### 类型 3：纯世界观/规则设定
-
-**触发关键词：** 世界观、设定集、规则书、魔法体系、修炼体系、势力设定、地理设定、世界规则
-
-**需要读取的 reference：**
-- `references/worldbuilding-guide.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-- 如果涉及物品/能力：`references/extract-item.md`
-
-编写完成后，按 `card-writing-guide.md` 第六节禁词清单逐条扫描内容。
-
----
-
-### 类型 4：物品/能力/装备设定
-
-**触发关键词：** 武器、道具、装备、技能、能力、功法、魔法、物品、神器、防具、消耗品
-
-**需要读取的 reference：**
-- `references/extract-item.md`
-- `references/worldbuilding-guide.md`（物品需要挂靠世界观）
-- `references/config-guide.md`
-- `references/position-guide.md`
-
----
-
-### 类型 5：文风提取/文风设定
-
-**触发关键词：** 文风、写作风格、文笔、笔风、语言风格、模仿写作
-
-**需要读取的 reference：**
-- `references/extract-style.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-
-文风条目需遵循零度写作原则，不含禁词。
-
----
-
-### 类型 6：故事/章节提取
-
-**触发关键词：** 故事线、章节、总结故事、提取章节、剧情提取、每章总结
-
-**需要读取的 reference：**
-- `references/extract-story.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-
----
-
-### 类型 7：修改已有世界书
-
-**触发关键词：** 修改、更新、编辑、添加条目、删除条目、调整
-
-**需要读取的 reference：**
-- 先用 `python scripts/query.py <世界书路径>` 查看现有条目
-- 根据要修改的内容类型，读取对应的 reference（参考类型 1-6）
-- `references/config-guide.md`
-
-**修改时检查：双递归是否全部为 true？内容是否无禁词渗入？**
-
----
-
-### 类型 8：MVU ZOD 变量系统
-
-**触发关键词：** MVU、ZOD、变量、变量系统、数值系统、好感度系统
-
-**需要读取的 reference：**
-- `references/mvu-guide.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-
----
-
-### 类型 9：HTML 前端美化
-
-**触发关键词：** 美化、HTML、前端、状态栏、界面、UI
-
-**需要读取的 reference：**
-- `references/html-beautify-guide.md`
-- `references/config-guide.md`
-- `references/position-guide.md`
-
----
-
-## 世界书创建流程
-
-当任务类型为需要创建世界书条目时，按以下流程执行。
-
-### 一、思维链分析
+#### 步骤2：配置总纲条目
 
 ```
-思维链:
-  需求拆解:
-    - 显性需求: ${用户提出的}
-    - 隐性需求: ${未明说但需补全的}
-    - 冲突判断: ${是否有矛盾？}
-  规模规划:
-    - 条目总数预估
-    - 核心角色数
-    - 卡片类型: 单角色卡 / 多角色卡
-  配置规划:
-    - 单卡: 所有角色条目蓝灯 constant=true
-    - 多卡: 角色速览蓝灯 + 各角色详情绿灯
-    - 世界观: 蓝灯 position=0
-    - NPC/场景: 绿灯 position=1 scanDepth=2
-  条目规划表:
-    | # | 类型 | comment | position | constant | keys | order |
-    |---|------|---------|----------|----------|------|-------|
-    | 1 | 世界观总纲 | xxx总纲 | 0 | true | — | 1 |
-    | 2 | 角色速览 | xxx速览 | 1 | true/false | — | 4 |
-    | 3 | 人物设定 | <角色名> | 1 | true/false | 角色名 | 10 |
-    | 4 | 性格 | <角色名>_personality | 1 | true/false | — | 30 |
-    | 5 | 人物设定 | <角色名2> | 1 | true/false | 角色名2 | 11 |
-    | 6 | 性格 | <角色名2>_personality | 1 | true/false | — | 31 |
-    | ... | ... | ... | ... | ... | ... | ... |
-
-  铁律: 多卡时每人2条 = 人物设定 + 性格
-
-  禁词红线: 所有条目内容必须通过禁词扫描（叙事禁词/比喻禁词/描写禁律）。详见 card-writing-guide.md 六
+position: 0 (before_char)
+order: 1
+constant: true
+prevent_recursion: true
+exclude_recursion: true
 ```
 
-### 二、撰写 outline.txt
-
-```
-总纲:
-[一句话定义这个世界/角色/故事]
-
-人物总纲:
-- 角色名: 身份/定位/一句话速览
-- ...
-
-条目规划:
-| # | 类型 | comment | position | constant | keys | order |
-|---|------|---------|----------|----------|------|-------|
-| 1 | 世界观总纲 | xxx | 0 | true | — | 1 |
-| 2 | 人物设定 | <角色名> | 1 | true/false | 角色名 | 10 |
-| 3 | 性格 | <角色名>_personality | 1 | true/false | — | 30 |
-| 4 | 人物设定 | <角色名2> | 1 | true/false | 角色名2 | 11 |
-| 5 | 性格 | <角色名2>_personality | 1 | true/false | — | 31 |
-| ... | ... | ... | ... | ... | ... | ... |
-```
-
-多卡铁律：每人2条 = 人物设定 + 性格。人物设定模板见 `character-guide.md` 一，性格模板见 `character-guide.md` 四。
-
-禁词：所有条目编写完成后，必须逐条扫描禁词清单。此清单绝不以任何形式写入世界书条目内容。
-
-### 三、写入条目
-
-1. **先写世界观总纲**（position=0, constant, order=1）— 确认无误后再展开
-2. **写入物总纲/速览** — 蓝绿灯按卡片类型配置
-3. **逐条填充详情条目** — 按条目规划表顺序写入。**多卡时每个角色必须拥有独立的 人物设定条目 + 性格条目**（N个角色 = 2N条），每写完一条用 `query.py --brief` 确认配置
-4. **终检**：
-   - 蓝绿灯分配正确（`query.py --brief`）
-   - 所有条目 `preventRecursion=true` 且 `excludeRecursion=true`
-   - 按 `card-writing-guide.md` 第六节禁词清单逐条扫描所有条目内容——无禁词渗入
-
-### 四、🚫 禁词自查（强制——写完所有条目后必须执行）
-
-禁词清单（`card-writing-guide.md` 第六节）是**编写者的自查工具**。写完所有世界书条目内容后，逐条对照扫描。此清单绝不以任何形式写入世界书条目。
+写入后人工核对配置项（position/constant/recursion），进入下一阶段。
 
 ---
 
-## 决策流程
+### 阶段三：展开 — 逐条按规划表顺序写入
 
+前置条件：总纲已写入并确认。
+
+#### 步骤1：角色速览条目（仅多角色卡）
+
+内容为所有核心角色的关键信息摘要。姓名、身份、一句话特征。每个角色不超过两行。
+
+配置：
 ```
-用户输入 → 判断任务类型(角色卡? 世界书? 转化? MVU? HTML?)
-         → 角色卡: 读取 card-writing-guide.md → 写 outline → 写内容 → DoubleCheck → card-generator.py
-         → 世界书: 总纲先行 → 逐条填充 → 自查
-         → 转化:   读取 conversion-guide.md → 提取 → 写 outline.txt → 条目化（世界书）→ 角色卡内容（如需）→ 自查
+position: 1 (after_char)
+order: 4
+constant: true
+prevent_recursion: true
+exclude_recursion: true
 ```
 
-角色卡和转化任务都必须先写 outline（角色卡: SKILL.md A.3; 转化: conversion-guide.md 第二步）。
+#### 步骤2：人物设定条目
+
+每个角色一条，使用 `<character>` XML 结构。**完整模板和字段写法规格见 `character-guide.md`**。
+
+配置（单角色卡）：
+```
+position: 1 (after_char)
+order: 10
+constant: true
+prevent_recursion: true
+exclude_recursion: true
+```
+
+配置（多角色卡）：
+```
+position: 1 (after_char)
+order: 10（按角色依次递增）
+constant: false
+keys: 角色全名,昵称,外号（英文逗号分隔）
+prevent_recursion: true
+exclude_recursion: true
+```
+
+#### 步骤3：性格条目
+
+从人物设定中独立出一条纯性格条目，内容为 `<personality>` 块。必须独立：基本信息是"她是谁"，性格是"她怎么行为"。混在一起会导致AI在读取基本信息时错误调用性格标签。
+
+配置同步骤2中的人物设定条目。
+
+#### 步骤4：物品/能力条目
+
+```yaml
+<item>
+name: 物品名
+type: 类型标签
+description: 简要说明——让AI了解这是什么，不写成产品说明书
+</item>
+```
+
+**特殊物品写作规范（重要）：**
+
+| 物品类型 | 写什么 | 不写什么 |
+|---------|--------|---------|
+| 服装 | 外观、材质、剪裁、颜色 | 优点、缺点、穿着感受 |
+| 性玩具 | 外形特征、玩法方式、结构描述 | 精确长度尺寸、直径数值 |
+| 刀具/枪械 | 类型、口径、使用弹种、基本参数 | 威力评价、"特种部队最爱"等形容词 |
+
+配置：
+```
+position: 1 (after_char)
+order: 50-70
+constant: false
+keys: 物品名,相关词,别称（英文逗号分隔）
+scanDepth: 2
+prevent_recursion: true
+exclude_recursion: true
+```
+
+#### 步骤5：场景/事件条目
+
+```yaml
+<scene>
+name: 场景名
+location: 地理位置
+description: 场景描述——氛围、特征、与角色的关联
+</scene>
+```
+
+配置：
+```
+position: 1 (after_char)
+order: 80-98
+constant: false
+keys: 场景名,地点名,相关词（英文逗号分隔）
+scanDepth: 2
+prevent_recursion: true
+exclude_recursion: true
+```
+
+#### 步骤6：故事/章节条目
+
+每条对应一个故事阶段或章节摘要。格式灵活，可用纯文本。
+
+配置：
+```
+position: 1 (after_char)
+order: 100
+constant: false
+keys: 章节关键词（英文逗号分隔）
+scanDepth: 2
+prevent_recursion: true
+exclude_recursion: true
+```
 
 ---
 
-## 执行原则
+### 阶段四：验证 — 收尾自查
 
-1. **先读 reference，再动手。** 不要凭记忆写，必须读过对应 reference 后才开始写内容。
-2. **每个任务类型都必须读 `config-guide.md` 和 `position-guide.md`**——配置错误比内容错误更难排查。
-3. **角色卡任务必须读 `card-writing-guide.md`**，并执行 DoubleCheck 确认流程。
-4. **转化任务必须先读 `conversion-guide.md`**，它规定了提取→条目创建的整体流程。
-5. 对于修改任务，**先用 `query.py --brief` 查看**，再确定改什么。
-6. **写完所有条目后，按 `card-writing-guide.md` 第六节禁词清单逐条扫描**——确保无禁词渗入世界书内容。
-7. **所有条目键不可跳过 `--prevent-recursion --exclude-recursion`**——参照 config-guide.md 第四节。
-8. **零度写作、白描原则贯穿始终**——不写意象比喻、不写解释性修饰、不写不存在的事物。
-9. **MVU 和 HTML 仅用户明确要求时才启用**——不主动建议，不主动添加。
+全部条目写入完成后逐条人工核对：
+
+- 双递归是否全部开启（preventRecursion=true, excludeRecursion=true）
+- 单角色卡的条目是否全部蓝灯（constant=true）
+- 多角色卡的详情条目是否设为绿灯（constant=false）且关键词完整
+- D1及以上深度（@D depth>=1）是否没有任何条目
+- 内容中是否包含禁词。读 writing-optimization-guide.md 逐条扫描
+
+> query.py 仅用于独立世界书文件。嵌入角色卡的世界书由 card-generator.py 统一生成 JSON，条目配置正确性在 card-generator.py --validate 时一并检查。
+
+---
+
+## 详细规范
+
+### 条目分类与顺序总表
+
+| order | 条目类型 | position | constant | 递归 | 备注 |
+|-------|---------|----------|----------|------|------|
+| 1 | 世界观总纲 | 0 (before_char) | true | 双开 | 世界框架 |
+| 4 | 角色速览 | 1 (after_char) | true | 双开 | 多角色卡必写；单角色卡跳过 |
+| 10+ | 人物设定条目 | 1 (after_char) | 视卡型 | 双开 | XML结构，参考 character-guide.md |
+| 35+ | 性格条目 | 1 (after_char) | 视卡型 | 双开 | 独立条目 |
+| 50-70 | 物品/能力条目 | 1 (after_char) | false | 双开 | 关键词触发 |
+| 80-98 | 场景/事件条目 | 1 (after_char) | false | 双开 | 关键词触发，scanDepth=2 |
+| 99 | 角色详情补充 | 1 (after_char) | 视卡型 | 双开 | 多卡绿灯 |
+| 100 | NPC/故事/其他 | 1 (after_char) | false | 双开 | 关键词触发 |
+
+### 蓝绿灯决策规则
+
+```
+单角色卡
+  └─ 该角色所有条目 → constant=true（蓝灯，无论拆成多少个条目）
+
+多角色卡
+  ├─ 角色速览 → constant=true（蓝灯）
+  ├─ 各角色详情 → constant=false + keys覆盖所有称呼
+  └─ 各角色性格 → constant=false + keys覆盖所有称呼
+
+世界观条目
+  └─ constant=true（蓝灯）
+
+NPC / 场景 / 事件 / 物品 / 能力
+  └─ constant=false + scanDepth=2
+```
+
+### 位置配置
+
+| position 值 | 含义 | 适合放什么 |
+|-------------|------|-----------|
+| 0 (before_char) | 角色定义之前 | 宏观世界观。设定、机制、历史 |
+| 1 (after_char) | 角色定义之后 | 角色详情、物品、场景、NPC |
+| 4 (at_depth) | D齿轮深度0 | 仅放对AI的行为指导（二次解释等） |
+
+D1及以上深度不放任何内容。预设把聊天记录框起来告诉AI"这是互动历史"，在中间插入设定会破坏完整性，导致AI理解混乱。
+
+### XML包裹YAML格式规范
+
+条目内容统一使用 XML 标签包裹 YAML 的格式：
+
+**必须遵守的三条规则：**
+1. XML标签独占一行，不与其他内容混在一起
+2. 标签内的内容缩进展开（2空格或4空格）
+3. 禁止纯XML格式。所有XML标签不闭合在同一行，标签必须换行
+
+**正确示例：**
+
+```
+<character>
+  姓名: 张三
+  年龄: 20
+  外貌:
+    身高: 175cm
+    发色: 黑色短发
+  性格:
+    - 直率
+    - 冲动
+</character>
+```
+
+**错误示例（禁止）：**
+
+```
+<character><name>张三</name><age>20</age></character><!-- 纯XML，标签不换行 -->
+<character>姓名: 张三 年龄: 20 外貌: 身高175cm</character><!-- 内容挤压单行 -->
+```
+
+### 递归设置
+
+所有条目必须同时开启两个递归选项，无论蓝灯还是绿灯：
+
+- **不可递归**（prevent_recursion / prevent_outgoing）：本条目内容不触发其他条目
+- **防止进一步递归**（exclude_recursion / prevent_incoming）：其他条目内容不触发本条目
+
+这是防止绿灯链式触发导致token爆炸的关键防线。忘了开任何一个都会在实际使用中造成严重后果。
+
+### 关键词设计
+
+- 关键词之间用英文逗号 `,` 分隔，禁用中文逗号、空格、分号
+- 覆盖所有可能被提及的称呼：
+  - 角色条目：全名,昵称,外号（如：秋明月,明月,秋姐）
+  - NPC条目：全名,昵称,外号,职务（如：王老师,王静,班主任）
+  - 场景条目：场景名,所在区域,别称（如：图书馆,主楼三层,自习室）
+  - 物品条目：物品名,简称,相关词（如：秋水剑,秋水,佩剑）
+
+---
+
+## 自查清单
+
+- [ ] 是否先判断了单角色卡还是多角色卡？
+- [ ] 条目规划表是否已列出并和用户确认？
+- [ ] 总纲条目是否最先写入且已确认？
+- [ ] 所有角色条目是否使用了 `<character>` XML 结构（参考 character-guide.md）？
+- [ ] 性格是否从人物设定中独立成单独的条目？
+- [ ] 单角色卡的所有条目是否全部设为蓝灯？
+- [ ] 多角色卡的详情条目是否全部设为绿灯且关键词覆盖所有称呼？
+- [ ] 服装条目是否只写了外观和材质，没写优缺点和穿着感受？
+- [ ] 性玩具条目是否只写了外形和玩法，没写精确长度直径？
+- [ ] 武器条目是否写了类型/口径/弹种，没写成军火评测？
+- [ ] 每写完一条是否执行了 `query.py --brief` 验证？
+- [ ] 所有条目的双递归（不可递归 + 防止进一步递归）是否都已开启？
+- [ ] D1及以上深度是否没有任何条目？
+- [ ] XML标签是否独立成行，内容是否缩进展开？
+- [ ] 关键词是否使用英文逗号分隔？
+- [ ] 文件自身是否包含禁词？
+
+---
+
+## 常见错误示例
+
+❌ 错误：单角色卡拆了5个条目，其中性格条目设成了绿灯
+✅ 正确：单角色卡所有条目全部蓝灯常驻，无论拆成多少个条目
+
+❌ 错误：条目内容写"面料的触感柔软舒适，版型修身显瘦，缺点是不耐洗"
+✅ 正确：写"米白色棉麻衬衫，宽松剪裁，七分袖"
+
+❌ 错误：性玩具条目写"长18厘米，直径3.5厘米，医用硅胶材质"
+✅ 正确：写"弯曲造型，表面有螺旋纹路，底部有吸盘可固定"
+
+❌ 错误：武器条目写"威力巨大，精准度极高，是特种部队最爱的主战装备"
+✅ 正确：写"9mm口径半自动手枪，使用9×19mm帕拉贝鲁姆弹，15发弹匣"
+
+❌ 错误：写了5个条目检查了4个，漏了一个没开双递归
+✅ 正确：所有条目逐条检查，双递归全开
+
+❌ 错误：content 为纯XML标签一长串不换行
+✅ 正确：XML标签独立成行，内容缩进展开
+
+❌ 错误：先写了角色详情条目，回头再补总纲
+✅ 正确：总纲必须第一个写，确认后再展开其他条目
+
+❌ 错误：场景条目的keys用中文逗号：图书馆，自习室，主楼
+✅ 正确：场景条目的keys用英文逗号：图书馆,自习室,主楼
+
+❌ 错误：D齿轮深度1放了场景设定条目
+✅ 正确：D1及以上不放任何东西，场景条目放在after_char位置

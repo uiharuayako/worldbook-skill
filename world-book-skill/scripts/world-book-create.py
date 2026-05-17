@@ -164,6 +164,9 @@ def build_entry(args, uid=None, display_index=None, existing_entry=None):
     if args.order is not None:
         entry["order"] = args.order
     if args.position is not None:
+        if not (0 <= args.position <= 7):
+            print(f"错误: position 值 {args.position} 超出 0-7 范围，酒馆将静默跳过该条目", file=sys.stderr)
+            sys.exit(1)
         entry["position"] = args.position
     if args.outlet_name is not None:
         entry["outletName"] = args.outlet_name

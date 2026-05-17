@@ -865,14 +865,26 @@ def validate_card(card_path):
     # 检查世界书条目
     wb = data.get("character_book", {})
     entries = wb.get("entries", [])
+    if entries is None:
+        entries = []
     for i, e in enumerate(entries):
-        if "content" not in e:
-            errors.append(f"世界书条目 {i} 缺少 content")
+        if not e.get("content") or not str(e.get("content", "")).strip():
+            errors.append(f"世界书条目 {i} ({e.get('comment','')}) content为空")
         ext = e.get("extensions", {})
         if not ext.get("prevent_recursion"):
             warnings.append(f"世界书条目 {i} ({e.get('comment','')}) prevent_recursion=false")
         if not ext.get("exclude_recursion"):
             warnings.append(f"世界书条目 {i} ({e.get('comment','')}) exclude_recursion=false")
+        # 位置合法性检查（酒馆position范围 0-7，无效值会被switch default静默跳过）
+        pos = ext.get("position", e.get("position", -1))
+        if isinstance(pos, str):
+            pos = {"before_char": 0, "after_char": 1, "at_depth": 4}.get(pos, -1)
+        if isinstance(pos, (int, float)) and (pos < 0 or pos > 7):
+            errors.append(f"世界书条目 {i} ({e.get('comment','')}) position={pos} 超出0-7范围，酒馆将静默跳过该条目")
+        # keys格式检查（中文逗号/空格分隔会导致关键词匹配失败）
+        for k in e.get("keys", []):
+            if isinstance(k, str) and ('，' in k or '、' in k):
+                warnings.append(f"世界书条目 {i} ({e.get('comment','')}) keys含中文标点：'{k}'，酒馆用英文逗号分隔关键词")
 
     ext = data.get("extensions", {})
     for i, rs in enumerate(ext.get("regex_scripts", [])):
