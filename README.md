@@ -163,4 +163,4 @@ world-book-skill/
 |--------|--------|---------|
 | **sanmingyue** | [@sanmingyue](https://github.com/sanmingyue) | 角色卡编写方法论与提示词设计 |
 | **pisces1986** | [@pisces1986](https://github.com/pisces1986) | [#1](https://github.com/echo-xianyu/worldbook-skill/pull/1) `_Args` camelCase→snake_case 自动转换 / [#3](https://github.com/echo-xianyu/worldbook-skill/pull/3) 输入校验、MVU 风格冲突检测（部分合并） |
-| **uiharuayako** | [@uiharuayako](https://github.com/uiharuayako) | [#4](https://github.com/echo-xianyu/worldbook-skill/pull/4) Gemini Deep Research 支持、openai.yaml prompt 引用修复 |
+| **uiharuayako** | [@uiharuayako](https://github.com/uiharuayako) | [#4](https://github.com/echo-xianyu/worldbook-skill/pull/4) openai.yaml prompt 引用修复 |
