@@ -1,30 +1,42 @@
-# License — 双重授权
+Attribution-NonCommercial-ShareAlike 4.0 International
 
-本项目根据文件类型采用不同的开源许可证：
+=======================================================================
 
-## references/ 和 SKILL.md（提示词、写作指南、知识库）
+This work is licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 4.0 International License.
 
-[Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+To view a copy of this license, visit:
+http://creativecommons.org/licenses/by-nc-sa/4.0/
 
-您可以自由地：共享、复制和重新分发本材料；改编、修改和二次创作。
-但必须遵守以下条件：
-- **署名** — 必须注明原始作者和出处（echo-xianyu/worldbook-skill）
-- **非商业性使用** — 不得将本材料用于商业目的
-- **相同方式共享** — 修改后的作品必须以相同许可证发布
+=======================================================================
 
-## scripts/（Python 脚本）
+You are free to:
 
-[GNU Affero General Public License v3.0](https://www.gnu.org/licenses/agpl-3.0.html)
+  Share — copy and redistribute the material in any medium or format.
+  Adapt — remix, transform, and build upon the material.
 
-AGPLv3 的核心要求：
-- 您可以自由使用、修改和分发这些脚本
-- 如果您通过网络提供基于这些脚本的服务，必须公开您的修改源代码
-- 任何衍生作品必须以 AGPLv3 发布
+Under the following terms:
 
-## 立场声明
+  Attribution — You must give appropriate credit, provide a link to
+    the license, and indicate if changes were made. You may do so in
+    any reasonable manner, but not in any way that suggests the
+    licensor endorses you or your use.
 
-本项目由开源 RolePlay 社区维护，服务于非商业的角色扮演创作。
-严禁用于任何收费 AI 平台、商业代写、或盈利性 API 服务。
-违反上述条款的使用者，将拒绝提供技术支持。
+  NonCommercial — You may not use the material for commercial purposes.
+    This includes, but is not limited to: paid AI platforms, commercial
+    character card commissions, fee-based API services, or any use that
+    generates direct or indirect revenue.
 
-This project is strictly non-commercial. Community-maintained for open-source RolePlay.
+  ShareAlike — If you remix, transform, or build upon the material,
+    you must distribute your contributions under the same license as
+    the original.
+
+No additional restrictions — You may not apply legal terms or
+technological measures that legally restrict others from doing
+anything the license permits.
+
+=======================================================================
+
+This project is maintained by the open-source RolePlay community.
+Commercial use is explicitly prohibited and will result in the
+community refusing all technical support.
