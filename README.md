@@ -37,7 +37,7 @@ AI 就会自动执行任务：
 | **MVU & EJS 动态内容** | 集成 ZOD 变量系统 + EJS 多阶段人设/调色盘，支持状态栏渲染与全局正文美化 |
 | **HTML 美化** | 全局美化 + 状态栏美化 + 开场选择器，响应式 CSS 变量体系，内联 SVG 图标 |
 | **CLI 管理工具** | `world-book-create.py` (世界书) / `card-generator.py` (角色卡) / `query.py` (查询) |
-| **Deep Research 资料搜集** | 可选 `gemini-deep-research.py`，支持 Google AI Studio API Key 或 gcli2api 生成的 OAuth JSON |
+| **Deep Research 资料搜集** | 可选 `gemini-deep-research.py`，使用 Google AI Studio API Key |
 | **SubAgent 质量自检** | 生成 JSON 前唤起 SubAgent，逐字扫描禁词、破折号、配置正确性，修正后才输出 |
 
 ## 支持场景
@@ -91,16 +91,17 @@ world-book-skill/
 
 - Python 3.8+
 - SillyTavern (用于导入生成的 JSON)
-- 可选：Google AI Studio API Key，或 gcli2api 生成的 OAuth 配置 JSON（仅 Deep Research 流程需要）
+- 可选：Google AI Studio API Key（仅 Deep Research 流程需要）
 
 ## 可选 Deep Research
 
 Deep Research 是**显式启用**的可选资料搜集层，不影响默认写卡 / 世界书 / MVU / HTML 功能。
 
+API key 创建、`.env` 配置和 Deep Research 使用示例见 [README_Gemini.md](README_Gemini.md)。
+
 1. 复制 `.env.example` 为 `.env`
-2. 填写 `GEMINI_DEEP_RESEARCH_CONFIG_JSON=/absolute/path/to/credential.json`
-3. 或填写 `GEMINI_API_KEY=...`
-4. 仅在你明确要求 Deep Research 时，调用：
+2. 填写 `GEMINI_API_KEY=...`
+3. 仅在你明确要求 Deep Research 时，调用：
 
 ```bash
 python world-book-skill/scripts/gemini-deep-research.py \
@@ -114,8 +115,6 @@ python world-book-skill/scripts/gemini-deep-research.py \
 - `report.md`：整理后的研究报告
 - `sources.json`：提取出的来源列表
 
-如果 OAuth JSON 返回 scope 不足错误，说明这份凭证没有拿到 Gemini API 所需权限。此时应重新生成具备 `generativelanguage.googleapis.com` 访问权限的凭证，或改用 `GEMINI_API_KEY`。
-
 ---
 
 # 更新日志
@@ -123,9 +122,9 @@ python world-book-skill/scripts/gemini-deep-research.py \
 ## v4.1 — 2026-05-17
 
 ### 新增功能
-- **可选 Gemini Deep Research**：新增 `scripts/gemini-deep-research.py`，支持使用 Google AI Studio API Key 或 `gcli2api` 生成的 OAuth JSON 发起深度检索。
+- **可选 Gemini Deep Research**：新增 `scripts/gemini-deep-research.py`，支持使用 Google AI Studio API Key 发起深度检索。
 - **显式触发保护**：Deep Research 仅在用户明确要求时启用，不会改变默认写卡 / 世界书主流程。
-- **环境变量样例**：新增 `.env.example`，允许通过 `GEMINI_DEEP_RESEARCH_CONFIG_JSON` 指向本地 OAuth JSON 文件。
+- **环境变量样例**：新增 `.env.example`，说明如何通过 `GEMINI_API_KEY` 配置本地 Deep Research 调用。
 
 ### 文档更新
 - `SKILL.md`、`references/guide.md`、`references/information-extraction-guide.md`、`agents/openai.yaml` 已补充 Deep Research 路由与调用规则。

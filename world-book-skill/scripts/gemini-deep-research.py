@@ -11,25 +11,22 @@ Auth sources, in priority order:
 2. .env file values
 3. Current process environment variables
 
-Supported auth modes:
-- GEMINI_DEEP_RESEARCH_CONFIG_JSON: gcli2api-generated OAuth credential JSON
+Supported auth mode:
 - GEMINI_API_KEY / GOOGLE_API_KEY: Google AI Studio API key
 """
 
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import json
 import os
 import ssl
 import sys
 import time
 import urllib.error
-import urllib.parse
 import urllib.request
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 DEFAULT_AGENT = "deep-research-preview-04-2026"
@@ -38,7 +35,6 @@ DEFAULT_API_REVISION = "2026-05-20"
 DEFAULT_POLL_INTERVAL = 10
 DEFAULT_TIMEOUT = 1800
 DEFAULT_OUTPUT_DIR = "deep-research-output"
-TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 
 
 class ConfigError(RuntimeError):
@@ -51,7 +47,7 @@ class HttpError(RuntimeError):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run Gemini Deep Research with optional gcli2api OAuth credentials.",
+        description="Run Gemini Deep Research with a Gemini API key.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -73,7 +69,6 @@ Examples:
     parser.add_argument("--input-file", help="Read the research prompt from a UTF-8 text file.")
     parser.add_argument("--interaction-id", help="Resume polling an existing interaction id.")
     parser.add_argument("--env-file", help="Optional .env file. Defaults to cwd/.env, then skill-root/.env if present.")
-    parser.add_argument("--config-json", help="Path to a gcli2api-generated OAuth credential JSON file.")
     parser.add_argument("--api-key", help="Gemini API key from Google AI Studio.")
     parser.add_argument("--agent", help=f"Deep Research agent id. Default: {DEFAULT_AGENT}")
     parser.add_argument(
@@ -171,21 +166,6 @@ def parse_int(value: Optional[str], default: int) -> int:
     return int(str(value).strip())
 
 
-def parse_iso_datetime(value: Optional[str]) -> Optional[dt.datetime]:
-    if not value:
-        return None
-    normalized = value.strip()
-    if normalized.endswith("Z"):
-        normalized = normalized[:-1] + "+00:00"
-    try:
-        parsed = dt.datetime.fromisoformat(normalized)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=dt.timezone.utc)
-    return parsed.astimezone(dt.timezone.utc)
-
-
 def json_dumps(data: Any) -> str:
     return json.dumps(data, ensure_ascii=False, indent=2, sort_keys=True)
 
@@ -200,97 +180,26 @@ def read_prompt(args: argparse.Namespace) -> str:
     raise ConfigError("A research prompt is required. Use --input or --input-file.")
 
 
-def resolve_auth(
-    args: argparse.Namespace,
-    env_map: Dict[str, str],
-    ssl_context: ssl.SSLContext,
-) -> Dict[str, str]:
-    config_json = first_non_empty(
-        args.config_json,
-        env_map.get("GEMINI_DEEP_RESEARCH_CONFIG_JSON"),
-        env_map.get("GOOGLE_AI_STUDIO_OAUTH_JSON"),
-        env_map.get("GCLI2API_CONFIG_JSON"),
-    )
+def resolve_api_key(args: argparse.Namespace, env_map: Dict[str, str]) -> str:
     api_key = first_non_empty(
         args.api_key,
         env_map.get("GEMINI_API_KEY"),
         env_map.get("GOOGLE_API_KEY"),
     )
-    if config_json:
-        token = load_oauth_access_token(
-            Path(config_json).expanduser().resolve(),
-            ssl_context,
-        )
-        return {
-            "mode": "oauth",
-            "token": token,
-            "config_json": str(Path(config_json).expanduser().resolve()),
-        }
     if api_key:
-        return {"mode": "api_key", "token": api_key}
+        return api_key
     raise ConfigError(
-        "Missing Gemini auth. Set GEMINI_DEEP_RESEARCH_CONFIG_JSON or GEMINI_API_KEY "
+        "Missing Gemini auth. Set GEMINI_API_KEY "
         "via CLI, .env, or environment variables."
     )
 
 
-def load_oauth_access_token(config_path: Path, ssl_context: ssl.SSLContext) -> str:
-    if not config_path.exists():
-        raise ConfigError(f"OAuth config JSON not found: {config_path}")
-    data = json.loads(config_path.read_text(encoding="utf-8"))
-    access_token = str(data.get("access_token") or "").strip()
-    expiry = parse_iso_datetime(data.get("expiry"))
-    now = dt.datetime.now(dt.timezone.utc)
-    # Refresh when the token is missing or about to expire.
-    if access_token and expiry and expiry - now > dt.timedelta(minutes=2):
-        return access_token
-    refresh_token = str(data.get("refresh_token") or "").strip()
-    client_id = str(data.get("client_id") or "").strip()
-    client_secret = str(data.get("client_secret") or "").strip()
-    if not refresh_token or not client_id or not client_secret:
-        raise ConfigError(
-            "OAuth config JSON is missing refresh_token, client_id, or client_secret."
-        )
-    return refresh_access_token(refresh_token, client_id, client_secret, ssl_context)
-
-
-def refresh_access_token(
-    refresh_token: str,
-    client_id: str,
-    client_secret: str,
-    ssl_context: ssl.SSLContext,
-) -> str:
-    payload = urllib.parse.urlencode(
-        {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": client_id,
-            "client_secret": client_secret,
-        }
-    ).encode("utf-8")
-    request = urllib.request.Request(
-        TOKEN_ENDPOINT,
-        data=payload,
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        method="POST",
-    )
-    response = http_json(request, ssl_context)
-    token = str(response.get("access_token") or "").strip()
-    if not token:
-        raise ConfigError("OAuth refresh succeeded but no access_token was returned.")
-    return token
-
-
-def request_headers(auth: Dict[str, str], api_revision: str) -> Dict[str, str]:
-    headers = {
+def request_headers(api_key: str, api_revision: str) -> Dict[str, str]:
+    return {
         "Content-Type": "application/json",
         "Api-Revision": api_revision,
+        "x-goog-api-key": api_key,
     }
-    if auth["mode"] == "api_key":
-        headers["x-goog-api-key"] = auth["token"]
-    else:
-        headers["Authorization"] = f"Bearer {auth['token']}"
-    return headers
 
 
 def build_ssl_context(ca_bundle: Optional[str]) -> ssl.SSLContext:
@@ -310,12 +219,6 @@ def http_json(request: urllib.request.Request, ssl_context: ssl.SSLContext) -> A
             raw = response.read().decode("utf-8")
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
-        if "ACCESS_TOKEN_SCOPE_INSUFFICIENT" in body:
-            raise HttpError(
-                "OAuth token lacks the required Gemini API scopes for Deep Research. "
-                "Use GEMINI_API_KEY or regenerate the OAuth JSON with access to "
-                "generativelanguage.googleapis.com."
-            ) from exc
         raise HttpError(f"HTTP {exc.code} {exc.reason}: {body}") from exc
     except urllib.error.URLError as exc:
         raise HttpError(f"Network error: {exc}") from exc
@@ -326,7 +229,7 @@ def http_json(request: urllib.request.Request, ssl_context: ssl.SSLContext) -> A
 
 def create_interaction(
     prompt: str,
-    auth: Dict[str, str],
+    api_key: str,
     api_base: str,
     agent: str,
     api_revision: str,
@@ -350,7 +253,7 @@ def create_interaction(
     request = urllib.request.Request(
         f"{api_base}/interactions",
         data=json.dumps(body).encode("utf-8"),
-        headers=request_headers(auth, api_revision),
+        headers=request_headers(api_key, api_revision),
         method="POST",
     )
     return http_json(request, ssl_context)
@@ -358,14 +261,14 @@ def create_interaction(
 
 def get_interaction(
     interaction_id: str,
-    auth: Dict[str, str],
+    api_key: str,
     api_base: str,
     api_revision: str,
     ssl_context: ssl.SSLContext,
 ) -> Dict[str, Any]:
     request = urllib.request.Request(
         f"{api_base}/interactions/{interaction_id}",
-        headers=request_headers(auth, api_revision),
+        headers=request_headers(api_key, api_revision),
         method="GET",
     )
     return http_json(request, ssl_context)
@@ -377,7 +280,7 @@ def normalize_interaction_id(interaction_id: str) -> str:
 
 def wait_for_completion(
     interaction_id: str,
-    auth: Dict[str, str],
+    api_key: str,
     api_base: str,
     api_revision: str,
     poll_interval: int,
@@ -388,7 +291,7 @@ def wait_for_completion(
     while True:
         interaction = get_interaction(
             interaction_id,
-            auth,
+            api_key,
             api_base,
             api_revision,
             ssl_context,
@@ -496,7 +399,6 @@ def write_artifacts(
     output_dir: Path,
     prompt: Optional[str],
     interaction: Dict[str, Any],
-    auth_mode: str,
     env_path: Optional[Path],
 ) -> None:
     status = str(interaction.get("status") or "")
@@ -516,7 +418,7 @@ def write_artifacts(
         "",
         f"- interaction_id: {interaction_id}",
         f"- status: {status}",
-        f"- auth_mode: {auth_mode}",
+        "- auth_mode: api_key",
     ]
     if env_path:
         report_lines.append(f"- env_file: {env_path}")
@@ -552,7 +454,7 @@ def main() -> int:
             env_map.get("SSL_CERT_FILE"),
         )
         ssl_context = build_ssl_context(ca_bundle)
-        auth = resolve_auth(args, env_map, ssl_context)
+        api_key = resolve_api_key(args, env_map)
         agent = first_non_empty(
             args.agent,
             env_map.get("GEMINI_DEEP_RESEARCH_AGENT"),
@@ -583,7 +485,7 @@ def main() -> int:
             interaction_id = normalize_interaction_id(args.interaction_id)
             interaction = get_interaction(
                 interaction_id,
-                auth,
+                api_key,
                 DEFAULT_API_BASE,
                 api_revision,
                 ssl_context,
@@ -592,7 +494,7 @@ def main() -> int:
             if status not in {"completed", "failed", "cancelled", "canceled"}:
                 interaction = wait_for_completion(
                     interaction_id,
-                    auth,
+                    api_key,
                     DEFAULT_API_BASE,
                     api_revision,
                     poll_interval,
@@ -603,7 +505,7 @@ def main() -> int:
             prompt = read_prompt(args)
             interaction = create_interaction(
                 prompt,
-                auth,
+                api_key,
                 DEFAULT_API_BASE,
                 agent,
                 api_revision,
@@ -611,7 +513,7 @@ def main() -> int:
                 ssl_context,
             )
             if args.no_wait:
-                write_artifacts(output_dir, prompt, interaction, auth["mode"], env_path)
+                write_artifacts(output_dir, prompt, interaction, env_path)
                 print_status(interaction, output_dir)
                 return 0
             interaction_id = normalize_interaction_id(str(interaction.get("id") or ""))
@@ -619,7 +521,7 @@ def main() -> int:
                 raise HttpError(f"Interaction creation returned no id: {json_dumps(interaction)}")
             interaction = wait_for_completion(
                 interaction_id,
-                auth,
+                api_key,
                 DEFAULT_API_BASE,
                 api_revision,
                 poll_interval,
@@ -627,7 +529,7 @@ def main() -> int:
                 ssl_context,
             )
 
-        write_artifacts(output_dir, prompt, interaction, auth["mode"], env_path)
+        write_artifacts(output_dir, prompt, interaction, env_path)
         print_status(interaction, output_dir)
         if str(interaction.get("status") or "").lower() == "failed":
             error_payload = interaction.get("error")

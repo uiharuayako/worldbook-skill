@@ -6,7 +6,7 @@
 
 ## 本文内容
 
->本文指引如何在 world-book-skill 中使用 Gemini Deep Research 搜集资料。内容包括触发条件、授权方式、脚本调用、输出物处理、隐私边界和失败回退规则。Deep Research 的职责是搜资料和整理引用，不直接替代角色卡 JSON 生成。
+>本文指引如何在 world-book-skill 中使用 Gemini Deep Research 搜集资料。内容包括触发条件、API key 配置、脚本调用、输出物处理、隐私边界和失败回退规则。Deep Research 的职责是搜资料和整理引用，不直接替代角色卡 JSON 生成。
 
 ---
 
@@ -15,36 +15,20 @@
 1. **仅显式触发** — 用户没有明确要求 Deep Research 时，不要主动调用。
 2. **不替代主流程** — Deep Research 输出只是源材料，后续仍要按 `information-extraction-guide.md` / `character-card-guide.md` / `world-book-guide.md` 编写。
 3. **未配置不硬跑** — 若用户明确要求 Deep Research 但未配置授权，先说明缺少配置，再由用户决定是否改走普通搜索。
-4. **不把个人信息写入仓库** — OAuth JSON 文件路径、token、client_secret 等只放本地 `.env` 或环境变量，绝不写进 tracked 文件。
+4. **不把个人信息写入仓库** — API key 只放本地 `.env` 或环境变量，绝不写进 tracked 文件。
 5. **结果先落盘再使用** — 先产出 `report.md` / `sources.json` / `interaction.json`，再把报告视为源材料继续提取。
 
 ---
 
 ## 授权方式
 
-支持两种方式，二选一即可：
-
-### 方式 A：gcli2api 生成的 OAuth JSON
-
-在 `.env` 中填写：
-
-```bash
-GEMINI_DEEP_RESEARCH_CONFIG_JSON=/absolute/path/to/credential.json
-```
-
-脚本会读取该 JSON 中的 `access_token` / `refresh_token` / `client_id` / `client_secret`，必要时自动刷新 token。
-
-### 方式 B：Google AI Studio API Key
+只支持一种方式：Google AI Studio API key。
 
 在 `.env` 中填写：
 
 ```bash
 GEMINI_API_KEY=your_google_ai_studio_api_key
 ```
-
-如果同时配置了 OAuth JSON 和 API Key，脚本优先使用 OAuth JSON。
-
-如果 OAuth JSON 返回 scope 不足错误，说明该凭证没有 Gemini API Deep Research 所需权限。应重新生成带有 `generativelanguage.googleapis.com` 访问权限的凭证，或改用 API Key。
 
 ---
 
@@ -121,7 +105,7 @@ Deep Research 提示词要写成“研究任务”，不是“直接生成角色
 
 如果出现以下情况：
 
-- 缺少授权配置
+- 缺少 API key 配置
 - API 返回鉴权错误
 - 研究任务超时
 - 官方返回无有效内容
