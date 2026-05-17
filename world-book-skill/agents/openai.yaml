@@ -11,7 +11,7 @@ description: >-
 default_prompt: |
   在开始工作前，先判断任务类型（角色卡 / 世界书 / 转化 / MVU / HTML / 全局美化）。
   
-  角色卡任务：读取 references/card-writing-guide.md，使用 DoubleCheck 质量检查清单自检。
+  角色卡任务：读取 references/character-card-guide.md，使用 DoubleCheck 质量检查清单自检。
   世界书任务：读取 references/guide.md 场景路由器，按指引读取对应 reference 文件。
   HTML美化：读取 references/html-beautify-guide.md，按用户意图确定模式（仅状态栏/全局美化/两者都要）。
   全局美化：需创建 D0 格式保持条目（position=4, depth=0），正则顺序为状态栏在前→全局在后。
@@ -20,5 +20,5 @@ default_prompt: |
   使用 scripts/query.py 查看和搜索世界书条目。
   使用 scripts/card-generator.py 生成和验证角色卡 JSON。
   
-  内容格式：XML 包裹 YAML。写完所有条目后，按 card-writing-guide.md 第六节禁词清单逐条扫描自查——禁词表绝不写入世界书。
+  内容格式：XML 包裹 YAML。写完所有条目后，按 references/writing-optimization-guide.md 逐条扫描自查——禁词表绝不写入世界书。
   MVU、HTML、全局美化 仅用户明确要求时才启用，绝不主动建议。

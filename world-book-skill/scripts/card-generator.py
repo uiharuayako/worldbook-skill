@@ -498,8 +498,32 @@ class CardConfig:
         if not isinstance(c, dict):
             raise ValueError("配置必须是一个JSON对象")
 
+        # === 输入校验 ===
+        card = c.get("card", {}) or {}
+        if not card.get("name"):
+            raise ValueError("缺少必填字段: card.name")
+
+        # MVU 风格冲突检测
+        mvu = c.get("mvu", {})
+        if mvu.get("enabled"):
+            schema = mvu.get("schema_script", "")
+            has_zod_style = "registerMvuSchema" in schema
+            has_beta_style = any(kw in schema for kw in ["_.add(", "_.set(", "getvar("])
+            if has_zod_style and has_beta_style:
+                raise ValueError(
+                    "MVU 风格冲突：schema_script 同时包含 MVU zod（registerMvuSchema）"
+                    "和 MVU beta（_.add/_.set/getvar）的代码。"
+                    "两种风格不兼容，请统一为一种。"
+                )
+
+            first_mes = card.get("first_mes", "")
+            if first_mes and "<StatusPlaceHolderImpl/>" not in first_mes:
+                print("[WARN] MVU ep 用但 default opening (first_mes) missing <StatusPlaceHolderImpl/>")
+            for i, g in enumerate(card.get("alternate_greetings", [])):
+                if g and "<StatusPlaceHolderImpl/>" not in g:
+                    print(f"[WARN] alternate_greeting #{i+2} missing <StatusPlaceHolderImpl/>")
+
         # === 基本信息 ===
-        card = c.get("card", {})
         if card:
             builder.set_card_info(
                 name=card.get("name"),

@@ -4,6 +4,8 @@
 
 **注意：本项目基本由 AI 生成，可能会出现意料之外的问题。作者并不很懂编程，但欢迎提出 issue。**
 
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+
 ## 致谢
 本项目的角色卡编写方法论和提示词设计大量参考了 [sanmingyue](https://github.com/sanmingyue) 大佬的写卡教程与工作流理念，是本技能写作规范的基石。
 
@@ -92,7 +94,17 @@ world-book-skill/
 
 # 更新日志
 
-## v4.0 — 2026-05-17 (Current)
+## v4.0.1 — 2026-05-18 (Current)
+
+### 合并 PR 修复与增强
+
+| 来源 | PR | 内容 |
+|------|-----|------|
+| **pisces1986** | [#1](https://github.com/echo-xianyu/worldbook-skill/pull/1) | `world-book-create.py`：新增 `_camel_to_snake()` 自动转换，`_Args` 支持 camelCase/snake_case 双属性。batch JSON 同时兼容 `preventRecursion` 和 `prevent_recursion` 两种字段名。 |
+| **pisces1986** | [#3](https://github.com/echo-xianyu/worldbook-skill/pull/3) | `world-book-create.py`：`parse_key_list()` 同时支持数组和逗号分隔字符串输入。`card-generator.py`：新增 `card.name` 必填校验，新增 MVU 风格冲突检测（zod/beta 混用时报错），MVU 启用时检查开场白是否缺少 `<StatusPlaceHolderImpl/>` 占位符警告。 |
+| **uiharuayako** | [#4](https://github.com/echo-xianyu/worldbook-skill/pull/4) | `agents/openai.yaml`：修复第14行角色卡任务引用文件名（`card-writing-guide.md` → `character-card-guide.md`），修复第23行禁词扫描引用文件名（→ `writing-optimization-guide.md`）。 |
+
+## v4.0 — 2026-05-17
 
 ### 架构重构
 - **工作流程彻底拆分**：原创与二创分流独立流程。原创走 Plan 模式交互式搜集，二创走 `information-extraction-guide.md` 提取管线。
@@ -140,3 +152,15 @@ world-book-skill/
 
 ## v1.0 — 2025
 - 初始版本发布，支持基础世界书 JSON 生成。
+
+---
+
+## Contributors
+
+感谢以下贡献者对项目的代码贡献：
+
+| 贡献者 | GitHub | 贡献内容 |
+|--------|--------|---------|
+| **sanmingyue** | [@sanmingyue](https://github.com/sanmingyue) | 角色卡编写方法论与提示词设计 |
+| **pisces1986** | [@pisces1986](https://github.com/pisces1986) | [#1](https://github.com/echo-xianyu/worldbook-skill/pull/1) `_Args` camelCase→snake_case 自动转换 / [#3](https://github.com/echo-xianyu/worldbook-skill/pull/3) 输入校验、MVU 风格冲突检测（部分合并） |
+| **uiharuayako** | [@uiharuayako](https://github.com/uiharuayako) | [#4](https://github.com/echo-xianyu/worldbook-skill/pull/4) Gemini Deep Research 支持、openai.yaml prompt 引用修复 |
