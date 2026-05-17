@@ -23,41 +23,36 @@
 > "为我生成一个有关于赛车的世界书，并提取作者的文风"
 
 AI 就会自动执行任务：
-1. **识别** — 自动判断是角色卡需求、世界书需求还是美化需求。
-2. **编写** — 遵循“角色卡编写铁律”，支持 XML 包裹 YAML 格式，自动处理禁词扫描。
-3. **生成** — 调用 CLI 脚本输出可直接导入 SillyTavern 的世界书或角色卡 JSON。
+1. **识别** — 自动判断原创还是二创，角色卡还是世界书，是否需要 MVU/EJS/HTML 美化。
+2. **编写** — 遵循"角色卡编写铁律"，XML 包裹 YAML 格式，description 空置、全部信息塞入世界书条目。
+3. **自查** — 唤起 SubAgent 执行禁词扫描（含破折号、叙事禁词、比喻禁词、描写禁律），自查通过后才进入生成。
+4. **生成** — 调用 CLI 脚本输出可直接导入 SillyTavern 的世界书或角色卡 JSON。
 
 ## 功能一览
 
 | 功能 | 说明 |
 |------|------|
-| **轻小说→世界书** | 喂文本，AI 自动抽取角色/世界观，生成标准世界书 JSON |
-| **高颜值角色卡** | 生成支持MVU ZOD与前端美化的角色卡，含档案、性格、世界观、开场白 |
-| **MVU & HTML 美化** | 集成 ZOD 变量系统，支持状态栏渲染与全局正文美化 |
-| **CLI 管理工具** | `world-book-create.py` (世界书) / `card-generator.py` (角色卡) |
-| **质量自检 (DoubleCheck)** | 内置 20+ 项检查清单，逐字扫描禁词，确保人设不崩且符合规范 |
+| **轻小说→世界书** | 喂文本，AI 自动抽取角色/世界观，标注章节行号，生成标准世界书 JSON |
+| **高颜值角色卡** | 生成支持 MVU ZOD 与前端美化的角色卡，含人物设定、性格、世界观、开场白 |
+| **MVU & EJS 动态内容** | 集成 ZOD 变量系统 + EJS 多阶段人设/调色盘，支持状态栏渲染与全局正文美化 |
+| **HTML 美化** | 全局美化 + 状态栏美化 + 开场选择器，响应式 CSS 变量体系，内联 SVG 图标 |
+| **CLI 管理工具** | `world-book-create.py` (世界书) / `card-generator.py` (角色卡) / `query.py` (查询) |
+| **SubAgent 质量自检** | 生成 JSON 前唤起 SubAgent，逐字扫描禁词、破折号、配置正确性，修正后才输出 |
 
 ## 支持场景
 
 | 场景 | 使用的 reference |
 |------|-----------------|
-| **V3 角色卡制作** | card-writing-guide + card-generator-guide + DoubleCheck 流程 |
-| **MVU 变量/美化** | mvu-guide + html-beautify-guide |
-| **轻小说/游戏转化** | conversion-guide + 全部 extract-* + 创作 guide |
-| **原创世界观/物品** | worldbuilding-guide + extract-item + config-guide |
-| **文风/故事提取** | extract-style + extract-story + config-guide |
-| **修改/查询已有内容** | query.py + 对应类型的 reference |
-
----
-
-## 使用方法
-
-把 `world-book-skill/` 文件夹装进你的 AI Agent（如 Codex/Claude 等支持 skill 的终端），AI 就能独立完成：
-
-1. **场景路由**：读取 `references/guide.md` 判断任务类型。
-2. **内容创作**：按 `character-guide.md` (世界书) 或 `card-writing-guide.md` (角色卡) 编写。
-3. **质量控制**：执行 **DoubleCheck** 扫描禁词与格式。
-4. **文件生成**：调用 `scripts/` 下的工具生成最终 JSON。
+| **原创角色卡制作** | character-card-guide + character-guide + card-generator-guide |
+| **二创/轻小说转化** | information-extraction-guide + character-card-guide + world-book-guide |
+| **MVU 变量系统** | mvu-guide |
+| **EJS 动态内容** | ejs-guide（须先有 MVU） |
+| **HTML 前端美化** | html-beautify-guide |
+| **原创世界观设计** | world-building-guide + world-book-guide + config-guide |
+| **物品/能力/装备** | world-book-guide + config-guide |
+| **文风/故事提取** | information-extraction-guide + writing-optimization-guide |
+| **修改/查询已有内容** | query.py + card-generator.py --decompile |
+| **禁词扫描与写作优化** | writing-optimization-guide |
 
 ---
 
@@ -65,29 +60,27 @@ AI 就会自动执行任务：
 
 ```
 world-book-skill/
-├── SKILL.md                     # 技能入口：v3.0 重构，涵盖角色卡与世界书全流程
-├── agents/openai.yaml           # 技能注册元数据
+├── SKILL.md                          # 技能入口：v4.0 重构，二创/原创分流，SubAgent自查
+├── plan.md                           # 施工蓝图：文件清单与参考来源映射
+├── agents/openai.yaml                # 技能注册元数据
 ├── scripts/
-│   ├── world-book-create.py    # 世界书增删改查 CLI
-│   ├── card-generator.py       # [新] 角色卡 V3 JSON 生成/解包工具
-│   └── query.py                # 世界书轻量查询/导出工具
+│   ├── world-book-create.py         # 世界书增删改查 CLI (+position 0-7 校验)
+│   ├── card-generator.py            # 角色卡 V3 JSON 生成/解包/编辑/验证/列表
+│   └── query.py                     # 世界书轻量查询/导出工具
 └── references/
-    ├── guide.md                # 场景路由器（AI 第一步读取）
-    ├── entry-conventions.md    # 总索引（含 XML 包裹 YAML 铁律）
-    ├── card-writing-guide.md   # [新] 角色卡创作规范与禁词自检
-    ├── card-generator-guide.md # [新] 角色卡生成器使用手册
-    ├── html-beautify-guide.md  # [新] HTML 模式与全局美化指南
-    ├── mvu-guide.md            # [新] MVU ZOD 变量系统说明
-    ├── character-guide.md      # 世界书角色条目创作铁律
-    ├── worldbuilding-guide.md  # 世界观写作 + 压缩 + 嵌套
-    ├── config-guide.md         # 世界书配置规则
-    ├── position-guide.md       # ST 注入位置参考
-    ├── extract-worldbuilding.md # 世界观提取指南
-    ├── extract-character.md    # 角色提取指南
-    ├── extract-item.md         # 物品/能力/装备提取指南
-    ├── extract-story.md        # 故事/章节提取指南
-    ├── extract-style.md        # 文风提取指南
-    └── conversion-guide.md     # 转化完整工作流
+    ├── guide.md                     # 场景路由器（11 种任务类型，AI 第一步读取）
+    ├── character-card-guide.md      # 角色卡编写：世界书条目 + 开场白（description 空）
+    ├── character-guide.md           # 角色条目结构模板（XML 包裹 YAML）
+    ├── world-building-guide.md      # 世界观设计（概念层，A/B/C 类型判定）
+    ├── world-book-guide.md          # 世界书条目化（落地层，蓝绿灯决策，物品规范）
+    ├── information-extraction-guide.md # 二创信息提取（章节行号标注，outline.txt）
+    ├── writing-optimization-guide.md   # 禁词扫描 + 写作优化（含破折号禁词）
+    ├── card-generator-guide.md      # 三个脚本完整使用指引（含酒馆兼容要点）
+    ├── config-guide.md              # 世界书配置规则（位置/蓝绿灯/递归）
+    ├── position-guide.md            # ST 注入位置参考
+    ├── mvu-guide.md                 # MVU ZOD 变量系统（五阶段集成流程）
+    ├── ejs-guide.md                 # EJS 动态内容（多阶段人设、调色盘）
+    └── html-beautify-guide.md       # HTML 前端美化（全局/状态栏/换行规则）
 ```
 
 ## 依赖
@@ -99,16 +92,41 @@ world-book-skill/
 
 # 更新日志
 
-## v3.0 — 2026-05-14 (Current)
+## v4.0 — 2026-05-17 (Current)
+
+### 架构重构
+- **工作流程彻底拆分**：原创与二创分流独立流程。原创走 Plan 模式交互式搜集，二创走 `information-extraction-guide.md` 提取管线。
+- **description 空置**：角色卡 description 字段不再写入内容，所有角色信息（基本档案、外貌、背景、关系、性格）全部塞入世界书条目，杜绝 AI 提前读取 description 导致性格标签打架。
+- **世界观与世界书分层**：世界观设计（`world-building-guide.md`）与世界书条目化（`world-book-guide.md`）拆为两个阶段，概念与落地互不混淆。
+- **SubAgent 自查机制**：生成 JSON 前必须唤起 SubAgent 执行禁词自查，逐字扫描通过后才调用 card-generator.py 生成输出。
+
+### 新增功能
+- **EJS 动态内容支持**：新增 `ejs-guide.md`，覆盖多阶段人设（控制器 + 阶段条目 + getwi 加载）和多阶段调色盘（底色/衍生/二次解释按变量值切换）。EJS 依赖 MVU，两者独立但不绑定。
+- **全脚本使用指引**：新增 `card-generator-guide.md`，覆盖三个 Python 脚本的全部 CLI 参数、config.json 逐字段说明、MVU/状态栏自动生成机制、酒馆 v2 规范兼容要点（position 0-7 范围校验、双递归强制开启）。
+- **脚本数据保护**：`card-generator.py` 新增 position 范围检查、content 空值检查、keys 中文标点检查；`world-book-create.py` 新增 position 越界拒绝写入。
+
+### 禁词与质量优化
+- **破折号列入禁词**：`writing-optimization-guide.md` 禁词表新增"——"（因果/解释性破折号），skill 自身全部 11 个 reference 文件已清理破折号。
+- **全局换行规则**：`html-beautify-guide.md` 新增 4 条全局美化规则（容器 white-space、占位符保留、CSS 作用域隔离、宏优先渲染），解决全局美化与状态栏互斥、文本挤作一团的问题。
+
+### 指引修改
+- 所有 reference 文件开头从"你的角色"改为"本文内容"，skill 不是让 AI 扮演角色，而是告诉 AI 这篇指引覆盖什么范围。
+- `character-guide.md` 模板从纯 XML 改为 XML 包裹 YAML 格式。
+- `world-book-guide.md` 物品/场景条目模板同步改为 XML 包裹 YAML。
+- `guide.md` 场景路由器重新编号，恢复故事/章节提取为独立类型 6。
+- `SKILL.md` 铁律、分支、收尾全部重写，自查前置于生成前。
+
+## v3.0 — 2026-05-14
+
 ### 重大功能升级
 - **角色卡系统上线**：新增 `card-generator.py`，支持生成/解包高标准 V3 角色卡 JSON。
 - **美化支持**：新增 `html-beautify-guide` 与 `mvu-guide`，支持 ZOD 变量状态栏与全局美化布局。
-- **质量检查体系**：引入 **DoubleCheck** 质量清单，包含 10+ 项逐字禁词扫描、6 项一致性检查。
-- **格式标准演进**：全面转向 **XML 包裹 YAML** 格式，提升 AI 编写的结构化程度。
+- **质量检查体系**：引入 DoubleCheck 质量清单，包含逐字禁词扫描与一致性检查。
+- **格式标准演进**：全面转向 XML 包裹 YAML 格式，提升 AI 编写的结构化程度。
 
 ### 细节优化
-- `SKILL.md` 全面重写，增加任务路由逻辑（第零步）。
-- 细化了“场景路由器” `guide.md`，明确区分世界书、角色卡、美化任务。
+- `SKILL.md` 全面重写，增加任务路由逻辑。
+- 细化场景路由器 `guide.md`，明确区分世界书、角色卡、美化任务。
 - 更新所有提取指南，适配最新的 YAML 结构化输出。
 
 ## v2.1 — 2026-05-09
@@ -117,7 +135,7 @@ world-book-skill/
 
 ## v2.0 — 2026-04-26
 - 新增 `query.py` 查询工具。
-- 新增场景路由器 `guide.md` 及 7 个场景提取/转化指南。
+- 新增场景路由器 `guide.md` 及提取/转化指南。
 - 角色条目格式升级，由单一指南拆分为角色、世界观、配置三个专项指南。
 
 ## v1.0 — 2025
