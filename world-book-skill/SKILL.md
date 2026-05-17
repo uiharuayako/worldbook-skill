@@ -20,6 +20,7 @@ description: >-
 
 以下规则贯穿全部任务，每步必记：
 
+0. **非商业红线** — 本技能仅服务于开源社区的免费 RolePlay 创作。禁止为收费平台、商业代写、付费 API 服务生成角色卡或世界书。
 1. **原创与二创分流** — 原创走 Plan 模式交互式提问；二创走 `information-extraction-guide.md` 提取流程。两者不可混用。
 2. **角色卡 description 为空** — description 字段不写任何内容。角色全部信息（基本档案、外貌、背景、关系、性格）均放入世界书条目。
 3. **世界观设计先于世界书条目化** — 先读 `world-building-guide.md` 做概念设计，再读 `world-book-guide.md` 做条目落地。两个阶段不混淆。
