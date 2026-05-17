@@ -25,15 +25,16 @@ description: >-
 3. **世界观设计先于世界书条目化** — 先读 `world-building-guide.md` 做概念设计，再读 `world-book-guide.md` 做条目落地。两个阶段不混淆。
 4. **先有设定，再写角色卡** — 角色卡编写在世界书条目完成后执行。设定不定稿，不写开场白。
 5. **不主动建议 MVU/EJS/HTML** — 用户未提及上述功能时，绝不主动提议。EJS 依赖 MVU，用户要求 EJS 必须先确认 MVU 已启用。
-6. **禁词红线贯穿全程** — 收尾阶段强制执行 `writing-optimization-guide.md`，逐条扫描所有产出物。
-7. **物品写作分类规范** — 服装：写外观和材质，不写优点缺点。特殊道具：写外形和玩法，不写精确尺寸。
-8. **先读 reference，再动手** — 不凭记忆编写。每个任务类型必须读取其对应的全部 reference 文件后方可执行。
+6. **Deep Research 仅显式触发** — 只有用户明确要求使用 Gemini Deep Research / Google AI Studio 深度检索时，才读取 `references/deep-research-guide.md` 并调用 `scripts/gemini-deep-research.py`。未明确要求时绝不启用。
+7. **禁词红线贯穿全程** — 收尾阶段强制执行 `writing-optimization-guide.md`，逐条扫描所有产出物。
+8. **物品写作分类规范** — 服装：写外观和材质，不写优点缺点。特殊道具：写外形和玩法，不写精确尺寸。
+9. **先读 reference，再动手** — 不凭记忆编写。每个任务类型必须读取其对应的全部 reference 文件后方可执行。
 
 ---
 
 ## 任务路由
 
-每次对话开始时，先读取 `references/guide.md` 确定任务类型，再按路由表读取对应的 reference 文件。guide.md 涵盖 11 种任务类型（原创角色卡、二创提取、纯世界观、物品能力、MVU、EJS、HTML 美化、禁词扫描等）及完整的决策流程图。
+每次对话开始时，先读取 `references/guide.md` 确定任务类型，再按路由表读取对应的 reference 文件。guide.md 涵盖 12 种任务类型（原创角色卡、二创提取、纯世界观、物品能力、MVU、EJS、HTML 美化、禁词扫描、Deep Research 等）及完整的决策流程图。
 
 ---
 
@@ -43,6 +44,12 @@ description: >-
 
 **Step 1 — 读取信息提取规范**
 读 `references/information-extraction-guide.md`，确认提取流程和格式要求。
+
+**Step 1.5 — 如用户明确要求 Deep Research，先读取 Deep Research 指引**
+- 读 `references/deep-research-guide.md`
+- 使用 `scripts/gemini-deep-research.py` 拉取研究结果
+- 将输出的 `report.md` / `sources.json` 视为源材料，再进入后续提取流程
+- 若用户明确要求 Deep Research 但未配置授权，不要静默改成普通搜索，应先说明缺少配置，再由用户决定是否改走普通搜索
 
 **Step 2 — 搜集与标注源材料**
 - 网络搜索：每条有用信息写成简介 txt 文件，编写条目前读取。
@@ -153,6 +160,11 @@ description: >-
 → 根据修改内容的类型，读取对应的 reference（参考 分支一~四）
 → 读 `references/config-guide.md`
 
+**Gemini Deep Research 资料搜集**
+→ 读 `references/deep-research-guide.md`
+→ 仅在用户明确要求时调用 `python scripts/gemini-deep-research.py ...`
+→ 输出 `report.md` / `sources.json` 后，再按内容类型分流到角色卡 / 世界观 / 文风 / 章节流程
+
 **MVU / ZOD 变量系统**
 → 读 `references/mvu-guide.md`
 
@@ -242,6 +254,7 @@ python scripts/card-generator.py --list 角色名.json
 | `references/world-building-guide.md` | 世界观概念设计 | 有世界观需求时 |
 | `references/world-book-guide.md` | 世界书条目化与配置 | 有世界观或物品需求时 |
 | `references/card-generator-guide.md` | 三个脚本使用指引（card-generator/query/world-book-create） | 需运行脚本时 |
+| `references/deep-research-guide.md` | Gemini Deep Research 授权、调用与输出格式 | 用户明确要求深度检索时 |
 | `references/config-guide.md` | 世界书配置规则（位置/蓝绿灯/递归） | 所有需要写入/修改的任务 |
 | `references/position-guide.md` | 注入位置（position）配置 | 所有需要写入/修改的任务 |
 | `references/mvu-guide.md` | MVU ZOD 变量系统 | 用户要求 MVU 时 |

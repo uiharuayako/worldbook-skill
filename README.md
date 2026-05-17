@@ -37,6 +37,7 @@ AI 就会自动执行任务：
 | **MVU & EJS 动态内容** | 集成 ZOD 变量系统 + EJS 多阶段人设/调色盘，支持状态栏渲染与全局正文美化 |
 | **HTML 美化** | 全局美化 + 状态栏美化 + 开场选择器，响应式 CSS 变量体系，内联 SVG 图标 |
 | **CLI 管理工具** | `world-book-create.py` (世界书) / `card-generator.py` (角色卡) / `query.py` (查询) |
+| **Deep Research 资料搜集** | 可选 `gemini-deep-research.py`，支持 Google AI Studio API Key 或 gcli2api 生成的 OAuth JSON |
 | **SubAgent 质量自检** | 生成 JSON 前唤起 SubAgent，逐字扫描禁词、破折号、配置正确性，修正后才输出 |
 
 ## 支持场景
@@ -52,6 +53,7 @@ AI 就会自动执行任务：
 | **物品/能力/装备** | world-book-guide + config-guide |
 | **文风/故事提取** | information-extraction-guide + writing-optimization-guide |
 | **修改/查询已有内容** | query.py + card-generator.py --decompile |
+| **显式深度检索资料** | deep-research-guide + gemini-deep-research.py |
 | **禁词扫描与写作优化** | writing-optimization-guide |
 
 ---
@@ -66,9 +68,11 @@ world-book-skill/
 ├── scripts/
 │   ├── world-book-create.py         # 世界书增删改查 CLI (+position 0-7 校验)
 │   ├── card-generator.py            # 角色卡 V3 JSON 生成/解包/编辑/验证/列表
-│   └── query.py                     # 世界书轻量查询/导出工具
+│   ├── query.py                     # 世界书轻量查询/导出工具
+│   └── gemini-deep-research.py      # 可选 Gemini Deep Research 资料搜集
 └── references/
-    ├── guide.md                     # 场景路由器（11 种任务类型，AI 第一步读取）
+    ├── guide.md                     # 场景路由器（12 种任务类型，AI 第一步读取）
+    ├── deep-research-guide.md       # Deep Research 调用规则（仅显式要求时使用）
     ├── character-card-guide.md      # 角色卡编写：世界书条目 + 开场白（description 空）
     ├── character-guide.md           # 角色条目结构模板（XML 包裹 YAML）
     ├── world-building-guide.md      # 世界观设计（概念层，A/B/C 类型判定）
@@ -87,12 +91,46 @@ world-book-skill/
 
 - Python 3.8+
 - SillyTavern (用于导入生成的 JSON)
+- 可选：Google AI Studio API Key，或 gcli2api 生成的 OAuth 配置 JSON（仅 Deep Research 流程需要）
+
+## 可选 Deep Research
+
+Deep Research 是**显式启用**的可选资料搜集层，不影响默认写卡 / 世界书 / MVU / HTML 功能。
+
+1. 复制 `.env.example` 为 `.env`
+2. 填写 `GEMINI_DEEP_RESEARCH_CONFIG_JSON=/absolute/path/to/credential.json`
+3. 或填写 `GEMINI_API_KEY=...`
+4. 仅在你明确要求 Deep Research 时，调用：
+
+```bash
+python world-book-skill/scripts/gemini-deep-research.py \
+  --env-file .env \
+  --input "Research key facts about the target work and cite sources." \
+  --output-dir ./deep-research-output
+```
+
+输出目录默认包含：
+- `interaction.json`：原始 API 响应
+- `report.md`：整理后的研究报告
+- `sources.json`：提取出的来源列表
+
+如果 OAuth JSON 返回 scope 不足错误，说明这份凭证没有拿到 Gemini API 所需权限。此时应重新生成具备 `generativelanguage.googleapis.com` 访问权限的凭证，或改用 `GEMINI_API_KEY`。
 
 ---
 
 # 更新日志
 
-## v4.0 — 2026-05-17 (Current)
+## v4.1 — 2026-05-17
+
+### 新增功能
+- **可选 Gemini Deep Research**：新增 `scripts/gemini-deep-research.py`，支持使用 Google AI Studio API Key 或 `gcli2api` 生成的 OAuth JSON 发起深度检索。
+- **显式触发保护**：Deep Research 仅在用户明确要求时启用，不会改变默认写卡 / 世界书主流程。
+- **环境变量样例**：新增 `.env.example`，允许通过 `GEMINI_DEEP_RESEARCH_CONFIG_JSON` 指向本地 OAuth JSON 文件。
+
+### 文档更新
+- `SKILL.md`、`references/guide.md`、`references/information-extraction-guide.md`、`agents/openai.yaml` 已补充 Deep Research 路由与调用规则。
+
+## v4.0 — 2026-05-17
 
 ### 架构重构
 - **工作流程彻底拆分**：原创与二创分流独立流程。原创走 Plan 模式交互式搜集，二创走 `information-extraction-guide.md` 提取管线。
