@@ -14,6 +14,8 @@
 | 入口 | 类型 1 / 3 | 类型 2（先提取再分流） |
 | 建议模式 | Plan 模式 | 直接执行 |
 
+> **所有任务类型均须同时读取 `references/card-generator-guide.md`，了解三个脚本的完整用法、config.json 格式和酒馆兼容性约束。不可跳过，不可凭记忆使用脚本，不可直接写入SillyTavern的世界书/角色卡json格式**
+
 ---
 
 ## 任务类型识别
@@ -45,6 +47,7 @@
 
 需要读取的 reference：
 - `references/information-extraction-guide.md` — 信息提取流程（必读，第一步）
+- `references/card-generator-guide.md` — 脚本使用指引（必读，生成 JSON 前必须读）
 - 提取完成后按产出分流：
   - 有角色人设 → 追加读 `references/character-card-guide.md` + `references/character-guide.md`
   - 有世界观信息 → 追加读 `references/world-building-guide.md` + `references/world-book-guide.md`
@@ -189,7 +192,7 @@
 ## 执行原则
 
 1. 先读 reference，再动手。不凭记忆写
-2. 每个任务类型必须读 `config-guide.md`、`position-guide.md` 和 `card-generator-guide.md`
+2. 每个任务类型都必须读 `config-guide.md`、`position-guide.md` 和 **`card-generator-guide.md`（所有脚本参数、config.json 格式、酒馆兼容性约束均在此文件，不读即无法正确运行脚本），不得跳过、自行写入SillyTavern的角色卡/世界书格式JSON**
 3. 二创任务必须先读 `information-extraction-guide.md`
 4. 修改任务先用 `query.py --brief` 查看，再确定改什么
 5. 所有产出物在完成后必须读 `writing-optimization-guide.md` 做禁词扫描
