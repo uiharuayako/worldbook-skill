@@ -94,6 +94,11 @@ world-book-skill/
 
 # 更新日志
 
+## v4.0.2 — 2026-05-18
+
+### 提示词强化
+- **`card-generator-guide.md` 必读强调**：在 `SKILL.md`（铁律/分支三/分支四/收尾）、`guide.md`（场景路由器/类型2/执行原则）、`world-book-guide.md`（头部/阶段四/自查清单）共 11 处位置新增/强化了必须阅读 `card-generator-guide.md` 的声明，防止 AI 凭记忆直接输出酒馆世界书/角色卡 JSON 格式。
+
 ## v4.0.1 — 2026-05-18 (Current)
 
 ### 合并 PR 修复与增强
