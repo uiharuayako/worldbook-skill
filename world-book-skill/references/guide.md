@@ -36,6 +36,7 @@
 如用户要求 MVU → 追加读取 `references/mvu-guide.md`
 如用户要求 EJS → 追加读取 `references/ejs-guide.md`（EJS 依赖 MVU，需先确认 MVU）
 如用户要求 HTML 美化 → 追加读取 `references/html-beautify-guide.md`
+如用户明确要求 Deep Research 搜资料 → 追加读取 `references/deep-research-guide.md`
 
 完成后 → 禁词扫描 → 读 `references/writing-optimization-guide.md`
 
@@ -46,6 +47,8 @@
 触发关键词：轻小说、小说、转角色卡、根据原文、根据小说、转化、提取、原作、游戏、文本转化、原文、网络搜索
 
 需要读取的 reference：
+- 若用户明确要求 Gemini Deep Research / Google AI Studio 深度检索：
+  - `references/deep-research-guide.md` — 深度检索授权与调用方式（先读）
 - `references/information-extraction-guide.md` — 信息提取流程（必读，第一步）
 - `references/card-generator-guide.md` — 脚本使用指引（必读，生成 JSON 前必须读）
 - 提取完成后按产出分流：
@@ -97,6 +100,7 @@
 - `references/card-generator-guide.md`
 
 提取后输出为世界书条目，挂绿灯触发。
+如用户明确要求 Deep Research 搜资料 → 追加读取 `references/deep-research-guide.md`
 
 ---
 
@@ -112,6 +116,7 @@
 - `references/card-generator-guide.md`
 
 每章一条世界书条目，绿灯关键词触发，scanDepth=2。写入前必须复读对应章节原文。
+如用户明确要求 Deep Research 搜资料 → 追加读取 `references/deep-research-guide.md`
 
 ---
 
@@ -168,6 +173,21 @@
 
 ---
 
+### 类型 12：Gemini Deep Research 资料搜集
+
+触发关键词：deep research、Deep Research、Gemini 深度检索、Google AI Studio 搜索、深度研究、联网研究报告
+
+需要读取的 reference：
+- `references/deep-research-guide.md`
+- 后续再按输出内容分流到类型 1-6
+
+铁律：
+1. 仅在用户明确要求时启用
+2. 未配置授权时，不要假装已经执行
+3. 研究结果只是源材料，不直接替代角色卡 JSON 生成
+
+---
+
 ## 决策流程
 
 ```
@@ -178,6 +198,7 @@
   │        章节？   → 类型6 → information-extraction-guide.md → world-book-guide.md
   │
   └─ 二创 → 类型2 → information-extraction-guide.md
+            → 若明确要求 Deep Research → deep-research-guide.md
             → 提取产出分流：
               ├─ 角色人设 → character-card-guide.md
               ├─ 世界观 → world-building-guide.md → world-book-guide.md
@@ -198,3 +219,4 @@
 5. 所有产出物在完成后必须读 `writing-optimization-guide.md` 做禁词扫描
 6. MVU/EJS/HTML 仅用户明确要求时启用，不主动建议
 7. EJS 依赖 MVU，用户要 EJS 时必须先确认 MVU 已启用
+8. Deep Research 仅用户明确要求时启用，不主动替换普通搜索流程
